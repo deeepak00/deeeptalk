@@ -2,6 +2,7 @@ from flask import Flask, request, send_from_directory
 from flask_socketio import SocketIO, join_room, leave_room, emit
 from flask_cors import CORS
 from datetime import datetime
+import pytz
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -34,7 +35,8 @@ def pick_color(room):
     return COLORS[0]
 
 def ts():
-    return datetime.now().strftime("%H:%M")
+    IST = pytz.timezone("Asia/Kolkata")
+    return datetime.now(IST).strftime("%H:%M")
 
 @socketio.on("join")
 def on_join(data):
