@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>deeepTalk — Chat with anyone, anywhere, anytime</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--surface:#151820;--panel:#1a1e28;--border:#252a38;
+  --input-bg:#1e2330;--text:#e8eaf0;--muted:#6b7280;
+  --accent:#6c8fff;--accent2:#a78bfa;--online:#34d399;--danger:#f87171;
+  --own-msg:#1e2d50;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+
+/* JOIN */
+.join-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden;}
+.join-wrap::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(108,143,255,.13) 0%,transparent 70%);top:-150px;left:-150px;pointer-events:none;}
+.join-wrap::after{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(167,139,250,.10) 0%,transparent 70%);bottom:-100px;right:-100px;pointer-events:none;}
+.join-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 32px 80px rgba(0,0,0,.5);}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.logo-text{font-size:22px;font-weight:600;}
+.logo-text span{color:var(--accent);}
+.join-title{font-size:26px;font-weight:600;margin-bottom:6px;letter-spacing:-0.5px;}
+.join-sub{color:var(--muted);font-size:14px;margin-bottom:28px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.field input{width:100%;background:var(--input-bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);outline:none;transition:border-color .2s;}
+.field input:focus{border-color:var(--accent);}
+.field input::placeholder{color:var(--muted);}
+.join-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:opacity .2s,transform .1s;}
+.join-btn:hover:not(:disabled){opacity:.9;transform:translateY(-1px);}
+.join-btn:disabled{opacity:.5;cursor:not-allowed;}
+.join-footer{margin-top:24px;text-align:center;font-size:12px;color:var(--muted);}
+.join-footer span{color:var(--accent);}
+.err-box{margin-top:12px;padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:9px;font-size:13px;color:var(--danger);}
+
+/* CONNECTING */
+.connecting-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);flex-direction:column;gap:20px;}
+.conn-text{font-size:14px;color:var(--muted);}
+.dots{display:flex;gap:5px;}
+.dots span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:dotbounce 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes dotbounce{0%,80%,100%{transform:translateY(0);opacity:.3;}40%{transform:translateY(-6px);opacity:1;}}
+.retry-btn{padding:10px 24px;background:transparent;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:border-color .2s,color .2s;}
+.retry-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* LAYOUT */
+.chat-layout{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-top{padding:18px 16px 14px;border-bottom:1px solid var(--border);}
+.room-badge{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;}
+.room-hash{font-size:18px;color:var(--accent);font-weight:700;}
+.room-name{font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.online-line{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.green-dot{width:7px;height:7px;border-radius:50%;background:var(--online);display:inline-block;}
+.section-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:12px 16px 6px;}
+.users-list{flex:1;overflow-y:auto;padding:0 8px 8px;}
+.user-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;}
+.user-row:hover{background:var(--panel);}
+.uavatar{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.uname{font-size:13.5px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ustatus{width:7px;height:7px;border-radius:50%;background:var(--online);}
+.leave-btn{margin:10px;padding:9px;background:transparent;border:1px solid var(--border);border-radius:9px;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,border-color .15s;}
+.leave-btn:hover{background:rgba(248,113,113,.08);border-color:var(--danger);}
+
+/* MAIN */
+.chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.topbar{height:58px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.topbar-title{font-size:16px;font-weight:600;}
+.topbar-title span{color:var(--accent);}
+.topbar-room{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
+.topbar-right{margin-left:auto;font-size:12px;color:var(--muted);}
+.menu-btn{display:none;width:34px;height:34px;border-radius:9px;border:none;background:transparent;color:var(--muted);cursor:pointer;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-right:4px;}
+
+/* MESSAGES */
+.msgs{flex:1;overflow-y:auto;padding:16px 20px 8px;display:flex;flex-direction:column;gap:2px;}
+.msgs::-webkit-scrollbar{width:5px;}
+.msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+.ev-msg{text-align:center;font-size:12px;color:var(--muted);padding:6px 0;display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0;}
+.ev-line{flex:1;height:1px;background:var(--border);max-width:80px;}
+.ev-tag{background:var(--panel);border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:11.5px;}
+.msg-group{display:flex;flex-direction:column;margin-top:10px;}
+.msg-group.own{align-items:flex-end;}
+.msg-meta{display:flex;align-items:center;gap:7px;margin-bottom:4px;padding:0 4px;}
+.msg-group.own .msg-meta{flex-direction:row-reverse;}
+.mavatar{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.muser{font-size:12.5px;font-weight:600;}
+.mtime{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
+.bubble{max-width:500px;padding:9px 13px;border-radius:14px;font-size:14.5px;line-height:1.5;word-break:break-word;background:var(--panel);border:1px solid var(--border);border-top-left-radius:4px;}
+.msg-group.own .bubble{background:var(--own-msg);border-color:rgba(108,143,255,.25);border-top-right-radius:4px;border-top-left-radius:14px;}
+.bubble.big-emoji{background:transparent!important;border:none!important;font-size:32px;padding:2px 4px;}
+
+/* TYPING */
+.typing-bar{height:28px;padding:0 22px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.typing-text{font-size:12px;color:var(--muted);font-style:italic;}
+.tdots{display:flex;gap:3px;}
+.tdots span{width:4px;height:4px;border-radius:50%;background:var(--muted);animation:dotbounce 1.2s infinite;}
+.tdots span:nth-child(2){animation-delay:.2s;}
+.tdots span:nth-child(3){animation-delay:.4s;}
+
+/* INPUT */
+.input-wrap{padding:10px 16px 0;flex-shrink:0;position:relative;}
+.input-box{background:var(--input-bg);border:1.5px solid var(--border);border-radius:14px;display:flex;align-items:flex-end;gap:6px;padding:8px 8px 8px 14px;transition:border-color .2s;}
+.input-box:focus-within{border-color:var(--accent);}
+.chat-input{flex:1;background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14.5px;color:var(--text);resize:none;max-height:120px;min-height:24px;line-height:1.6;padding:3px 0;}
+.chat-input::placeholder{color:var(--muted);}
+.iactions{display:flex;gap:4px;align-items:flex-end;padding-bottom:2px;}
+.icon-btn{width:34px;height:34px;border-radius:9px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s,color .15s;}
+.icon-btn:hover{background:var(--panel);color:var(--text);}
+.send-btn{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:opacity .15s,transform .1s;}
+.send-btn:hover:not(:disabled){opacity:.85;transform:scale(1.05);}
+.send-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* FOOTER */
+.chat-footer{padding:6px 22px 12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.footer-text{font-size:11px;color:var(--muted);}
+.footer-text span{color:var(--accent);}
+
+/* EMOJI */
+.epicker{position:absolute;bottom:62px;right:18px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;width:310px;box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:100;}
+.esearch{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;margin-bottom:8px;}
+.esearch::placeholder{color:var(--muted);}
+.ecats{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px;}
+.ecat-btn{font-size:15px;padding:4px 6px;border:none;border-radius:7px;background:transparent;cursor:pointer;transition:background .15s;}
+.ecat-btn:hover,.ecat-btn.active{background:var(--panel);}
+.egrid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:190px;overflow-y:auto;}
+.egrid::-webkit-scrollbar{width:4px;}
+.egrid::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+.emoji-btn{font-size:20px;padding:5px;border:none;background:transparent;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s,transform .1s;}
+.emoji-btn:hover{background:var(--panel);transform:scale(1.2);}
+.fade-enter-active,.fade-leave-active{transition:all .15s ease;}
+.fade-enter-from,.fade-leave-to{opacity:0;transform:translateY(6px) scale(.97);}
+/* ── RESPONSIVE ─────────────────────────── */
+
+/* Tablet (max 900px) */
+@media(max-width:900px){
+  .sidebar{ width:220px; }
+  .bubble{ max-width:360px; }
+}
+
+/* Mobile (max 640px) */
+@media(max-width:640px){
+  /* Join screen */
+  .join-card{ padding:32px 22px; border-radius:16px; margin:16px; }
+  .join-title{ font-size:22px; }
+
+  /* Hide sidebar by default, show as overlay when toggled */
+  .chat-layout{ position:relative; }
+  .sidebar{
+    position:absolute; left:-100%; top:0; bottom:0;
+    width:80%; max-width:280px;
+    z-index:200;
+    transition:left .25s ease;
+    box-shadow:4px 0 24px rgba(0,0,0,.5);
+  }
+  .sidebar.open{ left:0; }
+  .sidebar-overlay{
+    display:none;
+    position:absolute;inset:0;
+    background:rgba(0,0,0,.5);
+    z-index:199;
+  }
+  .sidebar-overlay.open{ display:block; }
+
+  /* Show menu button in topbar */
+  .menu-btn{ display:flex !important; }
+
+  /* Topbar */
+  .topbar{ padding:0 14px; gap:8px; }
+  .topbar-right{ display:none; }
+
+  /* Messages */
+  .msgs{ padding:12px 12px 6px; }
+  .bubble{ max-width:85vw; font-size:14px; }
+
+  /* Input */
+  .input-wrap{ padding:8px 10px 0; }
+
+  /* Footer */
+  .chat-footer{ padding:4px 12px 10px; }
+  .footer-text{ font-size:10.5px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- JOIN -->
+  <div v-if="screen==='join'" class="join-wrap">
+    <div class="join-card">
+      <div class="logo">
+        <div class="logo-icon">💬</div>
+        <div class="logo-text"><span>deeep</span>Talk</div>
+      </div>
+      <div class="join-title">Join a room</div>
+      <div class="join-sub">Chat with anyone, anywhere, anytime.</div>
+      <div class="field">
+        <label>Your name</label>
+        <input v-model="form.username" placeholder="e.g. Alex" maxlength="24" @keyup.enter="doJoin" autofocus/>
+      </div>
+      <div class="field">
+        <label>Room name</label>
+        <input v-model="form.room" placeholder="e.g. general" maxlength="32" @keyup.enter="doJoin"/>
+      </div>
+      <button class="join-btn" @click="doJoin" :disabled="!canJoin">Enter Room →</button>
+      <div v-if="errMsg" class="err-box">⚠ {{ errMsg }}</div>
+      <div class="join-footer">Made with ♥ by <span>deeepak</span> · © 2025 deeepTalk</div>
+    </div>
+  </div>
+
+  <!-- CONNECTING -->
+  <div v-if="screen==='connecting'" class="connecting-wrap">
+    <div class="logo">
+      <div class="logo-icon">💬</div>
+      <div class="logo-text"><span>deeep</span>Talk</div>
+    </div>
+    <div class="conn-text">Connecting to <strong style="color:var(--accent)">#{{ form.room }}</strong>…</div>
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div v-if="errMsg" class="err-box" style="max-width:340px">⚠ {{ errMsg }}</div>
+    <button v-if="errMsg" class="retry-btn" @click="screen='join';errMsg=''">← Go back</button>
+  </div>
+
+  <!-- CHAT -->
+  <div v-if="screen==='chat'" class="chat-layout">
+
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" :class="{open:sidebarOpen}" @click="sidebarOpen=false"></div>
+    <aside class="sidebar" :class="{open:sidebarOpen}">
+      <div class="sidebar-top">
+        <div class="room-badge">
+          <span class="room-hash">#</span>
+          <span class="room-name">{{ room }}</span>
+        </div>
+        <div class="online-line">
+          <span class="green-dot"></span>
+          {{ users.length }} online
+        </div>
+      </div>
+      <div class="section-label">Members</div>
+      <div class="users-list">
+        <div class="user-row" v-for="u in users" :key="u.username">
+          <div class="uavatar" :style="{background:u.color}">{{ u.username[0].toUpperCase() }}</div>
+          <span class="uname">{{ u.username }}{{ u.username===username?' (you)':'' }}</span>
+          <span class="ustatus"></span>
+        </div>
+      </div>
+      <button class="leave-btn" @click="doLeave()">← Leave Room</button>
+    </aside>
+
+    <div class="chat-main" @click="showEmoji=false">
+      <div class="topbar">
+        <button class="menu-btn" @click.stop="sidebarOpen=!sidebarOpen">☰</button>
+        <span style="font-size:20px">💬</span>
+        <span class="topbar-title"><span>deeep</span>Talk</span>
+        <span class="topbar-room">/ {{ room }}</span>
+        <div class="topbar-right">by deeepak</div>
+      </div>
+
+      <div class="msgs" ref="msgBox">
+        <template v-for="(m,i) in messages" :key="i">
+          <div v-if="m.kind==='event'" class="ev-msg">
+            <span class="ev-line"></span>
+            <span class="ev-tag">{{ m.text }} · {{ m.ts }}</span>
+            <span class="ev-line"></span>
+          </div>
+          <div v-else class="msg-group" :class="{own:m.username===username}">
+            <div class="msg-meta">
+              <div class="mavatar" :style="{background:m.color}">{{ m.username[0].toUpperCase() }}</div>
+              <span class="muser" :style="{color:m.color}">{{ m.username }}</span>
+              <span class="mtime">{{ m.ts }}</span>
+            </div>
+            <div class="bubble" :class="{'big-emoji':isBigEmoji(m.message)}">{{ m.message }}</div>
+          </div>
+        </template>
+        <div ref="anchor"></div>
+      </div>
+
+      <div class="typing-bar">
+        <template v-if="typers.length">
+          <div class="tdots"><span></span><span></span><span></span></div>
+          <span class="typing-text">{{ typers.join(', ') }} {{ typers.length===1?'is':'are' }} typing…</span>
+        </template>
+      </div>
+
+      <div class="input-wrap" @click.stop>
+        <transition name="fade">
+          <div v-if="showEmoji" class="epicker" @click.stop>
+            <input class="esearch" v-model="emojiQ" placeholder="Search emoji…"/>
+            <div class="ecats">
+              <button v-for="c in eCats" :key="c.n" class="ecat-btn" :class="{active:eCat===c.n}" @click="eCat=c.n">{{ c.i }}</button>
+            </div>
+            <div class="egrid">
+              <button v-for="e in filteredEmoji" :key="e" class="emoji-btn" @click.stop="pickEmoji(e)">{{ e }}</button>
+            </div>
+          </div>
+        </transition>
+        <div class="input-box">
+          <textarea class="chat-input" v-model="draft" ref="chatInput"
+            placeholder="Type a message…" rows="1"
+            @keydown.enter.exact.prevent="doSend"
+            @input="onInput">
+          </textarea>
+          <div class="iactions">
+            <button class="icon-btn" @click.stop="showEmoji=!showEmoji">😊</button>
+            <button class="send-btn" @click.stop="doSend" :disabled="!draft.trim()">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-footer">
+        <span class="footer-text">Chat with anyone, anywhere, anytime · Made with ♥ by <span>deeepak</span> · © 2025 deeepTalk</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, nextTick, onUnmounted } = Vue
+
+const EMOJIS = {
+  "Smileys":  { i:"😊", e:["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😵","🤐","🥴","🤢","🤮","🤧","😷"] },
+  "Gestures": { i:"👋", e:["👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌","🤞","🤟","🤘","🤙","👈","👉","👆","👇","☝","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","💪","💅","🤳"] },
+  "Hearts":   { i:"❤️", e:["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","🔥","💯","✨","⭐","🌟","💫","⚡","🎉","🎊","🥂","💎","👑","🏆","🍀"] },
+  "Animals":  { i:"🐶", e:["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🦇","🐺","🦄","🐝","🦋","🐢","🦎","🐙","🦑","🐬","🐳","🦈","🐊","🐘","🦒","🦘","🐕","🐈","🐓","🦚","🦜","🕊","🐇","🦔"] },
+  "Food":     { i:"🍕", e:["🍎","🍊","🍋","🍇","🍓","🍒","🍑","🥭","🍍","🥝","🍅","🥑","🌽","🌶","🍄","🥜","🍞","🥐","🧀","🍳","🍔","🍟","🍕","🌭","🌮","🌯","🥗","🍜","🍝","🍣","🍱","🍛","🍚","🍙","🍦","🍰","🎂","🍭","🍬","🍫","🍿","🍩","🍪","☕","🍵","🥤","🍺","🍷","🍸","🍹"] },
+  "Travel":   { i:"✈️", e:["🚗","🚕","🚙","🚌","🏎","🚓","🚑","🚒","🚐","🛻","🚚","🏍","🛵","🚲","🛴","⚓","🛶","⛵","🚤","🛥","🚢","✈️","🛩","🚁","🛸","🚀","🛰","🏔","🌋","🏕","🏖","🏜","🏝","🏠","🏡","🏢","🏰","🗼","🗽","🎌"] },
+  "Objects":  { i:"💻", e:["⌚","📱","💻","⌨️","🖥","🖨","🖱","💾","📷","📸","📹","📞","☎️","📺","📻","🔋","🔌","💡","🔦","🔧","🔨","🔩","🔑","🗝","🚪","🛏","📦","📝","📄","📋","📊","📈","📉","📚","📖","🔭","🔬","💊","🧪","🎮","🎸","🎹","🎺","🎻","🥁","🎨","🖌"] }
+}
+
+createApp({
+  setup(){
+    const screen   = ref('join')
+    const errMsg   = ref('')
+    const form     = ref({username:'',room:''})
+    const username = ref('')
+    const room     = ref('')
+    const users    = ref([])
+    const messages = ref([])
+    const typers   = ref([])
+    const draft    = ref('')
+    const showEmoji= ref(false)
+    const emojiQ   = ref('')
+    const eCat     = ref('Smileys')
+    const anchor   = ref(null)
+    const chatInput= ref(null)
+
+    const sidebarOpen = ref(false)
+    let socket=null, typingTimer=null, iAmTyping=false
+
+    const eCats = Object.entries(EMOJIS).map(([n,v])=>({n,i:v.i}))
+    const filteredEmoji = computed(()=>{
+      if(emojiQ.value.trim()) return Object.values(EMOJIS).flatMap(c=>c.e).filter(e=>e.includes(emojiQ.value.trim()))
+      return EMOJIS[eCat.value]?.e||[]
+    })
+    const canJoin = computed(()=> form.value.username.trim()&&form.value.room.trim()&&screen.value==='join')
+
+    function scrollDown(){ nextTick(()=>anchor.value?.scrollIntoView({behavior:'smooth'})) }
+    function isBigEmoji(t){ const s=t.trim(); return s.length<=8&&/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})+$/u.test(s) }
+
+    function doJoin(){
+      if(!canJoin.value) return
+      const uname=form.value.username.trim(), rname=form.value.room.trim()
+      username.value=uname; room.value=rname; errMsg.value=''; screen.value='connecting'
+      const serverURL=window.location.hostname==='localhost'?'http://localhost:5000':window.location.origin
+      socket=io(serverURL,{transports:['websocket','polling'],timeout:6000,reconnection:false})
+      socket.on('connect',()=>{ console.log('connected'); socket.emit('join',{username:uname,room:rname}) })
+      socket.on('connect_error',()=>{ errMsg.value='Cannot reach server at localhost:5000. Is Flask running?'; socket.disconnect(); socket=null })
+      socket.on('joined',(d)=>{ users.value=d.users; messages.value.push({kind:'event',text:`You joined #${d.room}`,ts:d.ts}); screen.value='chat'; scrollDown() })
+      socket.on('user_joined',(d)=>{ users.value=d.users; messages.value.push({kind:'event',text:`${d.username} joined the room`,ts:d.ts}); scrollDown() })
+      socket.on('user_left',(d)=>{ users.value=d.users; typers.value=typers.value.filter(u=>u!==d.username); messages.value.push({kind:'event',text:`${d.username} left the room`,ts:d.ts}); scrollDown() })
+      socket.on('new_msg',(d)=>{ messages.value.push({kind:'msg',...d}); scrollDown() })
+      socket.on('typing',(d)=>{ if(!typers.value.includes(d.username)) typers.value.push(d.username) })
+      socket.on('stop_typing',(d)=>{ typers.value=typers.value.filter(u=>u!==d.username) })
+      socket.on('disconnect',()=>{ if(screen.value==='chat') messages.value.push({kind:'event',text:'Disconnected from server',ts:''}) })
+    }
+
+    function doLeave(){
+      if(socket){socket.emit('leave',{username:username.value,room:room.value});socket.disconnect();socket=null}
+      screen.value='join';messages.value=[];users.value=[];typers.value=[];draft.value='';errMsg.value='';sidebarOpen.value=false
+    }
+
+    function doSend(){
+      const msg=draft.value.trim(); if(!msg||!socket) return
+      socket.emit('send_msg',{username:username.value,room:room.value,message:msg})
+      draft.value=''; stopTyping()
+      nextTick(()=>{ if(chatInput.value) chatInput.value.style.height='auto' })
+    }
+
+    function onInput(){
+      const el=chatInput.value
+      if(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+      if(!socket) return
+      if(!iAmTyping){iAmTyping=true;socket.emit('typing',{username:username.value,room:room.value})}
+      clearTimeout(typingTimer); typingTimer=setTimeout(stopTyping,1500)
+    }
+
+    function stopTyping(){
+      if(iAmTyping&&socket){iAmTyping=false;socket.emit('stop_typing',{username:username.value,room:room.value})}
+      clearTimeout(typingTimer)
+    }
+
+    function pickEmoji(e){ draft.value+=e; nextTick(()=>chatInput.value?.focus()) }
+
+    onUnmounted(()=>{ if(socket) socket.disconnect() })
+
+    return {
+      screen,errMsg,form,username,room,users,messages,typers,
+      draft,showEmoji,emojiQ,eCat,eCats,filteredEmoji,canJoin,
+      anchor,chatInput,sidebarOpen,
+      doJoin,doLeave,doSend,onInput,pickEmoji,isBigEmoji
+    }
+  }
+}).mount('#app')
+</script>
+</body>
+</html>
