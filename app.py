@@ -25,7 +25,7 @@ def statics(path):
     return send_from_directory(BASE_DIR, path)
 
 def room_users(room):
-    return [{"username": u["username"], "color": u["color"]} for u in rooms.get(room, {}).values()]
+    return [{"sid": sid, "username": u["username"], "color": u["color"]} for sid, u in rooms.get(room, {}).items()]
 
 def pick_color(room):
     used = {u["color"] for u in rooms.get(room, {}).values()}
@@ -59,6 +59,7 @@ def on_join(data):
 
     emit("joined", {
         "room": room, "username": uname, "color": color,
+        "sid": sid,
         "users": room_users(room), "ts": ts(),
         "history": history.get(room, []),
         "board":   boards.get(room, [])
@@ -78,7 +79,17 @@ def on_msg(data):
     room  = data["room"]
     sid   = request.sid
     color = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
-    msg = {"kind": "msg", "username": data["username"], "message": data.get("message", ""), "color": color, "ts": ts()}
+    msg = {
+        "kind": "msg",
+        "id": f"{request.sid}_{ts()}_{len(history.get(room,[]))}",
+        "sid": request.sid,
+        "username": data["username"],
+        "message": data.get("message", ""),
+        "color": color,
+        "ts": ts(),
+        "replyTo": data.get("replyTo", None),
+        "reactions": {}
+    }
     push_history(room, msg)
     emit("new_msg", msg, to=room)
 
@@ -87,17 +98,50 @@ def on_image(data):
     room  = data["room"]
     sid   = request.sid
     color = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
-    msg = {"kind": "image", "username": data["username"], "image": data["image"], "color": color, "ts": ts()}
+    msg = {
+        "kind": "image",
+        "id": f"{request.sid}_{ts()}_{len(history.get(room,[]))}",
+        "sid": request.sid,
+        "username": data["username"],
+        "image": data["image"],
+        "color": color,
+        "ts": ts(),
+        "replyTo": data.get("replyTo", None),
+        "reactions": {}
+    }
     push_history(room, msg)
     emit("new_msg", msg, to=room)
 
+@socketio.on("react_msg")
+def on_react(data):
+    """Toggle a reaction emoji on a message."""
+    room     = data["room"]
+    msg_id   = data["msg_id"]
+    emoji    = data["emoji"]
+    user_sid = request.sid          # use sid, not username — unique per connection
+    for msg in history.get(room, []):
+        if msg.get("id") == msg_id:
+            if "reactions" not in msg:
+                msg["reactions"] = {}
+            sids_reacted = msg["reactions"].get(emoji, [])
+            if user_sid in sids_reacted:
+                sids_reacted.remove(user_sid)
+            else:
+                sids_reacted.append(user_sid)
+            if sids_reacted:
+                msg["reactions"][emoji] = sids_reacted
+            elif emoji in msg["reactions"]:
+                del msg["reactions"][emoji]
+            break
+    emit("reaction_update", {"msg_id": msg_id, "reactions": msg.get("reactions", {})}, to=room)
+
 @socketio.on("typing")
 def on_typing(data):
-    emit("typing", {"username": data["username"]}, to=data["room"], include_self=False)
+    emit("typing", {"sid": request.sid, "username": data["username"]}, to=data["room"], include_self=False)
 
 @socketio.on("stop_typing")
-def on_stop(data):
-    emit("stop_typing", {"username": data["username"]}, to=data["room"], include_self=False)
+def on_stop_typing(data):
+    emit("stop_typing", {"sid": request.sid}, to=data["room"], include_self=False)
 
 # ── Whiteboard ──────────────────────────────────────────────
 
@@ -106,6 +150,31 @@ def on_wb_cursor(data):
     """Broadcast live cursor position — no storage, pure relay."""
     room = data["room"]
     emit("wb_cursor", data, to=room, include_self=False)
+
+@socketio.on("wb_img_move")
+def on_wb_img_move(data):
+    """Relay image drag/resize to others and update stored board."""
+    room   = data.get("room")
+    stroke = data.get("stroke")
+    if not room or not stroke:
+        return
+    for s in boards.get(room, []):
+        if s.get("tool")=="wbimage" and s.get("src")==stroke.get("src") and s.get("by")==stroke.get("by"):
+            s["x"]=stroke["x"]; s["y"]=stroke["y"]
+            s["w"]=stroke["w"]; s["h"]=stroke["h"]
+            break
+    emit("wb_img_move", data, to=room, include_self=False)
+
+@socketio.on("wb_img_delete")
+def on_wb_img_delete(data):
+    """Remove a specific image from the board."""
+    room = data.get("room")
+    if not room: return
+    boards[room] = [s for s in boards.get(room, [])
+                    if not (s.get("tool")=="wbimage" and
+                            s.get("src")==data.get("src") and
+                            s.get("by")==data.get("by"))]
+    emit("wb_img_delete", data, to=room, include_self=False)
 
 @socketio.on("wb_segment")
 def on_wb_segment(data):
@@ -163,7 +232,7 @@ def _remove(sid, room, username):
     if rooms[room]:
         evt = {"kind": "event", "text": f"{username} left the room", "ts": ts()}
         push_history(room, evt)
-        emit("user_left", {"username": username, "users": room_users(room), "ts": ts()}, to=room)
+        emit("user_left", {"sid": sid, "username": username, "users": room_users(room), "ts": ts()}, to=room)
     else:
         del rooms[room]
         if room in history: del history[room]

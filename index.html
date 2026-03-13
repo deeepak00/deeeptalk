@@ -18,10 +18,22 @@
   --accent:#6c8fff;--accent2:#a78bfa;--online:#34d399;--danger:#f87171;
   --own-msg:#1e2d50;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+html,body{
+  height:100%;
+  overflow:hidden;       /* NO page scroll ever */
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+}
+#app{
+  height:100dvh;         /* dvh = shrinks when mobile keyboard opens */
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
 
 /* JOIN */
-.join-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.join-wrap{height:100dvh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden auto}
 .join-wrap::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(108,143,255,.13) 0%,transparent 70%);top:-150px;left:-150px;pointer-events:none}
 .join-wrap::after{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(167,139,250,.10) 0%,transparent 70%);bottom:-100px;right:-100px;pointer-events:none}
 .join-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 32px 80px rgba(0,0,0,.5)}
@@ -39,7 +51,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .join-footer{margin-top:24px;text-align:center;font-size:12px;color:var(--muted)}.join-footer span{color:var(--accent)}
 .err-box{margin-top:12px;padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:9px;font-size:13px;color:var(--danger)}
 /* CONNECTING */
-.connecting-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);flex-direction:column;gap:20px}
+.connecting-wrap{height:100dvh;display:flex;align-items:center;justify-content:center;background:var(--bg);flex-direction:column;gap:20px}
 .conn-text{font-size:14px;color:var(--muted)}
 .dots{display:flex;gap:5px}.dots span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:dotbounce 1.2s infinite}
 .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
@@ -47,7 +59,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .retry-btn{padding:10px 24px;background:transparent;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer}
 .retry-btn:hover{border-color:var(--accent);color:var(--accent)}
 /* LAYOUT */
-.chat-layout{display:flex;height:100vh;overflow:hidden}
+.chat-layout{display:flex;height:100%;overflow:hidden;flex:1;min-height:0}
 /* SIDEBAR */
 .sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .sidebar-top{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
@@ -66,7 +78,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .leave-btn{margin:10px;padding:9px;background:transparent;border:1px solid var(--border);border-radius:9px;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,border-color .15s}
 .leave-btn:hover{background:rgba(248,113,113,.08);border-color:var(--danger)}
 /* CHAT MAIN */
-.chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0;min-height:0}
 .topbar{height:58px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0}
 .topbar-title{font-size:16px;font-weight:600}.topbar-title span{color:var(--accent)}
 .topbar-room{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace}
@@ -76,7 +88,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .wb-toggle-btn:hover,.wb-toggle-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(108,143,255,.08)}
 .menu-btn{display:none;width:34px;height:34px;border-radius:9px;border:none;background:transparent;color:var(--muted);cursor:pointer;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-right:4px}
 /* MESSAGES */
-.msgs{flex:1;overflow-y:auto;padding:16px 20px 8px;display:flex;flex-direction:column;gap:2px}
+.msgs{flex:1;overflow-y:auto;padding:16px 20px 8px;display:flex;flex-direction:column;gap:2px;min-height:0;overscroll-behavior:contain}
 .msgs::-webkit-scrollbar{width:5px}.msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 .ev-msg{text-align:center;font-size:12px;color:var(--muted);padding:6px 0;display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0}
 .ev-line{flex:1;height:1px;background:var(--border);max-width:80px}
@@ -90,10 +102,69 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .bubble{max-width:500px;padding:9px 13px;border-radius:14px;font-size:14.5px;line-height:1.5;word-break:break-word;background:var(--panel);border:1px solid var(--border);border-top-left-radius:4px}
 .msg-group.own .bubble{background:var(--own-msg);border-color:rgba(108,143,255,.25);border-top-right-radius:4px;border-top-left-radius:14px}
 .bubble.big-emoji{background:transparent!important;border:none!important;font-size:32px;padding:2px 4px}
+
+/* ── Reactions ── */
+.reaction-chip{display:flex;align-items:center;gap:3px;background:var(--panel);border:1.5px solid var(--border);border-radius:99px;padding:2px 8px 2px 6px;font-size:13px;cursor:pointer;transition:all .12s;user-select:none}
+.reaction-chip:hover{border-color:var(--accent);background:rgba(108,143,255,.1)}
+.reaction-chip.mine{border-color:var(--accent);background:rgba(108,143,255,.15)}
+.reaction-chip .rcount{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.reaction-chip.mine .rcount{color:var(--accent)}
+
+/* Quick reaction picker (hover popup) */
+.msg-actions{
+  display:flex;position:absolute;top:-40px;
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:4px 7px;gap:3px;align-items:center;
+  box-shadow:0 8px 28px rgba(0,0,0,.6);z-index:50;white-space:nowrap;
+  opacity:0;pointer-events:none;
+  transition:opacity .15s,transform .12s;
+  transform:translateY(5px);
+}
+.msg-wrap:hover .msg-actions,.msg-wrap:focus-within .msg-actions{opacity:1;pointer-events:all;transform:translateY(0)}
+.msg-wrap{position:relative;display:flex;flex-direction:column;max-width:500px}
+.msg-group.own .msg-wrap{align-self:flex-end}
+.reaction-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;padding:0 2px;max-width:100%}.msg-group.own .msg-actions{right:0;left:auto}
+.msg-group:not(.own) .msg-actions{left:0}
+.act-btn{min-width:30px;height:30px;border:none;background:transparent;cursor:pointer;border-radius:8px;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .12s,transform .1s;padding:0 3px}
+.act-btn:hover{background:var(--panel);transform:scale(1.2)}
+/* Reply — always a visible labeled pill */
+.act-reply{display:flex;align-items:center;gap:4px;height:26px;padding:0 10px;border:1px solid var(--border);border-radius:99px;background:var(--panel);color:var(--muted);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .12s;white-space:nowrap}
+.act-reply:hover{border-color:var(--accent);color:var(--accent);background:rgba(108,143,255,.12)}
+/* More-reactions "…" button */
+.act-more{min-width:26px;height:26px;border:1px solid var(--border);border-radius:7px;background:var(--panel);color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.act-more:hover{border-color:var(--accent);color:var(--accent)}
+.full-react-picker-fixed{
+  position:fixed;z-index:9999;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:8px 10px;display:flex;flex-wrap:wrap;gap:3px;max-width:280px;
+  box-shadow:0 12px 40px rgba(0,0,0,.7);
+}
+
+
+/* Reply quote in message */
+.reply-quote{background:rgba(108,143,255,.08);border-left:3px solid var(--accent);border-radius:4px 8px 8px 4px;padding:5px 10px;margin-bottom:5px;cursor:pointer;max-width:100%}
+.reply-quote:hover{background:rgba(108,143,255,.14)}
+.reply-quote-user{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:2px}
+.reply-quote-text{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
+.reply-quote-img{height:28px;border-radius:4px;vertical-align:middle;margin-top:2px}
+
+/* Reply bar above input */
+.reply-bar{display:flex;align-items:center;gap:8px;padding:7px 14px 0;flex-shrink:0}
+.reply-bar-inner{flex:1;background:rgba(108,143,255,.08);border:1px solid rgba(108,143,255,.2);border-radius:9px;padding:6px 10px;min-width:0}
+.reply-bar-label{font-size:11px;color:var(--accent);font-weight:600;margin-bottom:2px}
+.reply-bar-text{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reply-cancel{width:26px;height:26px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;flex-shrink:0;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.reply-cancel:hover{color:var(--danger);background:rgba(248,113,113,.1)}
+
+/* Highlighted message when scrolled-to */
+.msg-group.highlighted .bubble,.msg-group.highlighted .img-bubble{animation:msghl .8s ease}
+@keyframes msghl{0%,100%{background:var(--panel)}50%{background:rgba(108,143,255,.25)}}
 .img-bubble{max-width:320px;border-radius:14px;overflow:hidden;border:1px solid var(--border);cursor:pointer;border-top-left-radius:4px;position:relative}
 .msg-group.own .img-bubble{border-top-right-radius:4px;border-top-left-radius:14px;border-color:rgba(108,143,255,.25)}
 .img-bubble img{display:block;width:100%;max-height:280px;object-fit:cover}
 .img-bubble .img-overlay{position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,.5));font-size:11px;color:rgba(255,255,255,.85);font-family:'DM Mono',monospace}
+.wb-insert-btn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);border-radius:7px;color:#fff;font-size:11px;padding:3px 8px;cursor:pointer;opacity:0;transition:opacity .15s;white-space:nowrap;backdrop-filter:blur(4px)}
+.img-bubble:hover .wb-insert-btn{opacity:1}
 .history-divider{text-align:center;font-size:11.5px;color:var(--muted);padding:10px 0;display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0}
 .history-divider .hline{flex:1;height:1px;background:var(--border);max-width:60px}
 .history-divider .htag{background:rgba(108,143,255,.1);border:1px solid rgba(108,143,255,.2);border-radius:99px;padding:3px 12px;font-size:11px;color:var(--accent)}
@@ -104,7 +175,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .tdots span:nth-child(2){animation-delay:.2s}.tdots span:nth-child(3){animation-delay:.4s}
 /* INPUT */
 .input-wrap{padding:10px 16px 0;flex-shrink:0;position:relative}
-.input-box{background:var(--input-bg);border:1.5px solid var(--border);border-radius:14px;display:flex;align-items:flex-end;gap:6px;padding:8px 8px 8px 14px;transition:border-color .2s}
+.chat-footer{
+  padding:6px 22px;
+  padding-bottom:max(12px, env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}.input-box{background:var(--input-bg);border:1.5px solid var(--border);border-radius:14px;display:flex;align-items:flex-end;gap:6px;padding:8px 8px 8px 14px;transition:border-color .2s}
 .input-box:focus-within{border-color:var(--accent)}
 .chat-input{flex:1;background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14.5px;color:var(--text);resize:none;max-height:120px;min-height:24px;line-height:1.6;padding:3px 0}
 .chat-input::placeholder{color:var(--muted)}
@@ -179,8 +254,90 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 /* Pan hint */
 .pan-hint{font-size:11px;color:#3a3a5a;flex-shrink:0;white-space:nowrap}
 
-/* Canvas area */
+/* Canvas + image panel row */
+.wb-body{flex:1;display:flex;overflow:hidden;position:relative}
 .wb-canvas-wrap{flex:1;position:relative;overflow:hidden}
+
+/* ── Image sidebar panel ── */
+.wb-img-panel{
+  width:180px;flex-shrink:0;
+  background:#14142a;
+  border-left:1px solid #2d2d4a;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:width .2s ease;
+}
+.wb-img-panel.collapsed{width:0;border-left:none}
+.wb-img-panel-header{
+  height:40px;flex-shrink:0;
+  display:flex;align-items:center;
+  padding:0 12px;gap:8px;
+  border-bottom:1px solid #2d2d4a;
+  font-size:12px;font-weight:600;color:#8080a0;
+  font-family:'DM Sans',sans-serif;white-space:nowrap;
+}
+.wb-img-panel-header span{color:#6c8fff}
+.wb-img-list{
+  flex:1;overflow-y:auto;padding:10px 8px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.wb-img-list::-webkit-scrollbar{width:3px}
+.wb-img-list::-webkit-scrollbar-thumb{background:#2d2d4a;border-radius:99px}
+.wb-img-thumb{
+  position:relative;border-radius:8px;overflow:hidden;
+  border:1.5px solid #2d2d4a;cursor:pointer;
+  aspect-ratio:16/10;flex-shrink:0;
+  transition:border-color .15s,transform .12s;
+}
+.wb-img-thumb:hover{border-color:#6c8fff;transform:scale(1.03)}
+.wb-img-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.wb-img-thumb-label{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:3px 6px;
+  background:linear-gradient(transparent,rgba(0,0,0,.7));
+  font-size:9px;color:rgba(255,255,255,.7);
+  font-family:'DM Mono',monospace;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.wb-img-thumb-add{
+  position:absolute;inset:0;
+  background:rgba(108,143,255,.0);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;opacity:0;
+  transition:opacity .15s,background .15s;
+}
+.wb-img-thumb:hover .wb-img-thumb-add{opacity:1;background:rgba(108,143,255,.35)}
+.wb-img-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;color:#3a3a5a;font-size:11px;font-family:'DM Sans',sans-serif;text-align:center;
+  padding:16px;
+}
+
+/* Toggle button in toolbar */
+.wb-panel-toggle{
+  position:relative;
+  width:36px;height:36px;border-radius:8px;
+  border:1.5px solid transparent;
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;transition:all .15s;flex-shrink:0;color:#ccc;
+}
+.wb-panel-toggle:hover{background:rgba(255,255,255,.07);color:#fff}
+.wb-panel-toggle.active{background:rgba(108,143,255,.2);border-color:#6c8fff;color:#6c8fff}
+/* Badge count */
+.wb-panel-toggle .badge{
+  position:absolute;top:2px;right:2px;
+  background:#6c8fff;color:#fff;
+  font-size:8px;font-family:'DM Mono',monospace;
+  width:14px;height:14px;border-radius:99px;
+  display:flex;align-items:center;justify-content:center;
+  line-height:1;
+}
+
+@media(max-width:640px){
+  .wb-img-panel{width:140px}
+  .wb-img-panel.collapsed{width:0}
+}
 .wb-canvas{display:block;position:absolute;inset:0}
 
 /* Cursor variants — set by JS directly on canvas element */
@@ -246,10 +403,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   .menu-btn{display:flex!important}
   .topbar{padding:0 14px;gap:8px}
   .topbar-by{display:none}
-  .msgs{padding:12px 12px 6px}
+  .msgs{padding:10px 10px 4px}
   .bubble{max-width:85vw;font-size:14px}
+  .msg-wrap{max-width:85vw}
   .input-wrap{padding:8px 10px 0}
-  .chat-footer{padding:4px 12px 10px}
+  /* Hide the tagline footer on mobile — wastes space */
+  .chat-footer{display:none}
   /* Whiteboard toolbar wraps to 2 rows */
   .wb-toolbar{height:auto;flex-wrap:wrap;padding:7px 8px;gap:6px;row-gap:6px}
   .wb-tool{width:44px;height:44px;font-size:18px;border-radius:10px}
@@ -260,7 +419,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   .wb-actions{margin-left:0}
   .wb-btn{padding:8px 12px}
   .pan-hint{display:none}
-  /* Minimap top-right on phone (avoids FAB overlap) */
+  /* Minimap top-right on phone */
   .wb-minimap{bottom:auto;top:8px;right:8px}
   .wb-minimap canvas{width:110px;height:72px}
   .wb-fit-btn{bottom:auto;top:8px;right:128px}
@@ -313,9 +472,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     </div>
     <div class="section-label">Members</div>
     <div class="users-list">
-      <div class="user-row" v-for="u in users" :key="u.username">
+      <div class="user-row" v-for="u in users" :key="u.sid">
         <div class="uavatar" :style="{background:u.color}">{{ u.username[0].toUpperCase() }}</div>
-        <span class="uname">{{ u.username }}{{ u.username===username?' (you)':'' }}</span>
+        <span class="uname">{{ u.username }}<span v-if="u.sid===mySid" style="color:var(--muted);font-weight:400"> (you)</span></span>
         <span class="ustatus"></span>
       </div>
     </div>
@@ -338,27 +497,73 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <div v-if="hasHistory" class="history-divider">
         <span class="hline"></span><span class="htag">📜 Chat history</span><span class="hline"></span>
       </div>
-      <template v-for="(m,i) in messages" :key="i">
+      <template v-for="(m,i) in messages" :key="m.id||i">
         <div v-if="m.kind==='event'" class="ev-msg">
           <span class="ev-line"></span><span class="ev-tag">{{ m.text }} · {{ m.ts }}</span><span class="ev-line"></span>
         </div>
-        <div v-else-if="m.kind==='image'" class="msg-group" :class="{own:m.username===username}">
+
+        <!-- IMAGE message -->
+        <div v-else-if="m.kind==='image'" class="msg-group" :class="{own:m.sid===mySid}" :data-msgid="m.id">
           <div class="msg-meta">
             <div class="mavatar" :style="{background:m.color}">{{ m.username[0].toUpperCase() }}</div>
             <span class="muser" :style="{color:m.color}">{{ m.username }}</span>
             <span class="mtime">{{ m.ts }}</span>
           </div>
-          <div class="img-bubble" @click="lightboxSrc=m.image">
-            <img :src="m.image"/><div class="img-overlay">{{ m.ts }}</div>
+          <div class="msg-wrap">
+            <div class="msg-actions">
+              <button v-for="e in quickEmoji" :key="e" class="act-btn" @click.stop="reactMsg(m,e)" :title="e">{{e}}</button>
+              <button class="act-more" @click.stop="openReactPicker(m,$event)" title="More reactions">…</button>
+              <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;margin:0 2px"></div>
+              <button class="act-reply" @click.stop="startReply(m)">↩ Reply</button>
+            </div>
+            <div v-if="m.replyTo" class="reply-quote" @click="scrollToMsg(m.replyTo.id)">
+              <div class="reply-quote-user">↩ {{ m.replyTo.username }}</div>
+              <div v-if="m.replyTo.kind==='image'"><img :src="m.replyTo.image" class="reply-quote-img"/></div>
+              <div v-else class="reply-quote-text">{{ m.replyTo.message }}</div>
+            </div>
+            <div class="img-bubble" @click="lightboxSrc=m.image">
+              <img :src="m.image"/>
+              <div class="img-overlay">{{ m.ts }}</div>
+              <button v-if="showWB" class="wb-insert-btn" @click.stop="insertImageToWB(m.image)">🎨 Add to board</button>
+            </div>
+            <div v-if="m.reactions && Object.keys(m.reactions).length" class="reaction-row">
+              <div v-for="(rusers,emoji) in m.reactions" :key="emoji"
+                class="reaction-chip" :class="{mine:rusers.includes(mySid)}"
+                @click="reactMsg(m,emoji)">
+                {{emoji}}<span class="rcount">{{rusers.length}}</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div v-else class="msg-group" :class="{own:m.username===username}">
+
+        <!-- TEXT message -->
+        <div v-else class="msg-group" :class="{own:m.sid===mySid}" :data-msgid="m.id">
           <div class="msg-meta">
             <div class="mavatar" :style="{background:m.color}">{{ m.username[0].toUpperCase() }}</div>
             <span class="muser" :style="{color:m.color}">{{ m.username }}</span>
             <span class="mtime">{{ m.ts }}</span>
           </div>
-          <div class="bubble" :class="{'big-emoji':isBigEmoji(m.message)}">{{ m.message }}</div>
+          <div class="msg-wrap">
+            <div class="msg-actions">
+              <button v-for="e in quickEmoji" :key="e" class="act-btn" @click.stop="reactMsg(m,e)" :title="e">{{e}}</button>
+              <button class="act-more" @click.stop="openReactPicker(m,$event)" title="More reactions">…</button>
+              <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;margin:0 2px"></div>
+              <button class="act-reply" @click.stop="startReply(m)">↩ Reply</button>
+            </div>
+            <div v-if="m.replyTo" class="reply-quote" @click="scrollToMsg(m.replyTo.id)">
+              <div class="reply-quote-user">↩ {{ m.replyTo.username }}</div>
+              <div v-if="m.replyTo.kind==='image'"><img :src="m.replyTo.image" class="reply-quote-img"/></div>
+              <div v-else class="reply-quote-text">{{ m.replyTo.message }}</div>
+            </div>
+            <div class="bubble" :class="{'big-emoji':isBigEmoji(m.message)}">{{ m.message }}</div>
+            <div v-if="m.reactions && Object.keys(m.reactions).length" class="reaction-row">
+              <div v-for="(rusers,emoji) in m.reactions" :key="emoji"
+                class="reaction-chip" :class="{mine:rusers.includes(mySid)}"
+                @click="reactMsg(m,emoji)">
+                {{emoji}}<span class="rcount">{{rusers.length}}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </template>
       <div ref="anchor"></div>
@@ -367,7 +572,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <div class="typing-bar">
       <template v-if="typers.length">
         <div class="tdots"><span></span><span></span><span></span></div>
-        <span class="typing-text">{{ typers.join(', ') }} {{ typers.length===1?'is':'are' }} typing…</span>
+        <span class="typing-text">{{ typers.map(t=>t.username).join(', ') }} {{ typers.length===1?'is':'are' }} typing…</span>
       </template>
     </div>
 
@@ -377,6 +582,18 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <div style="flex:1;min-width:0"><div class="img-preview-name">{{ pendingImage.name }}</div><div class="img-preview-size">{{ pendingImage.size }}</div></div>
         <button class="img-preview-cancel" @click="pendingImage=null">✕</button>
       </div>
+    </div>
+
+    <!-- Reply bar -->
+    <div v-if="replyingTo" class="reply-bar">
+      <div class="reply-bar-inner">
+        <div class="reply-bar-label">↩ Replying to {{ replyingTo.username }}</div>
+        <div class="reply-bar-text">
+          <span v-if="replyingTo.kind==='image'">📷 Photo</span>
+          <span v-else>{{ replyingTo.message }}</span>
+        </div>
+      </div>
+      <button class="reply-cancel" @click="replyingTo=null">✕</button>
     </div>
 
     <div class="input-wrap" @click.stop>
@@ -466,36 +683,64 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <div class="wb-actions">
       <button class="wb-btn" @click="wbUndo">↩ Undo</button>
       <button class="wb-btn danger" @click="wbClearConfirm">🗑 Clear</button>
+      <!-- Image panel toggle -->
+      <button class="wb-panel-toggle" :class="{active:wbImgPanel}"
+        @click="wbImgPanel=!wbImgPanel" title="Toggle image library">
+        🖼
+        <span v-if="roomImages.length" class="badge">{{ roomImages.length }}</span>
+      </button>
       <button class="wb-btn primary" @click="showWB=false">✕ Close</button>
     </div>
   </div>
 
-  <!-- Canvas -->
-  <div class="wb-canvas-wrap" ref="wbWrap">
-    <canvas ref="wbCanvas" class="wb-canvas"
-      @mousedown.prevent="onMD"
-      @mousemove.prevent="onMM"
-      @mouseup.prevent="onMU"
-      @mouseleave.prevent="onML"
-      @contextmenu.prevent
-      @wheel.prevent="onWheel"
-      @touchstart.prevent="onTD"
-      @touchmove.prevent="onTM"
-      @touchend.prevent="onTU">
-    </canvas>
-    <!-- Cursor overlay: remote cursors drawn here -->
-    <canvas ref="cursorCanvas" class="wb-cursor-layer"></canvas>
-    <!-- Fit-all + Home buttons -->
-    <div class="wb-fit-btn">
-      <button class="wb-fab" @click="fitAll" title="Fit all content in view">⊞</button>
-      <button class="wb-fab" @click="goHome" title="Go to origin (0,0)">⌂</button>
+  <!-- Body: canvas area + image panel side by side -->
+  <div class="wb-body">
+
+    <!-- Canvas -->
+    <div class="wb-canvas-wrap" ref="wbWrap">
+      <canvas ref="wbCanvas" class="wb-canvas"
+        @mousedown.prevent="onMD"
+        @mousemove.prevent="onMM"
+        @mouseup.prevent="onMU"
+        @mouseleave.prevent="onML"
+        @dblclick.prevent="onDblClick"
+        @contextmenu.prevent
+        @wheel.prevent="onWheel"
+        @touchstart.prevent="onTD"
+        @touchmove.prevent="onTM"
+        @touchend.prevent="onTU">
+      </canvas>
+      <canvas ref="cursorCanvas" class="wb-cursor-layer"></canvas>
+      <div class="wb-fit-btn">
+        <button class="wb-fab" @click="fitAll" title="Fit all content in view">⊞</button>
+        <button class="wb-fab" @click="goHome" title="Go to origin (0,0)">⌂</button>
+      </div>
+      <div class="wb-minimap" @click="onMinimapClick" title="Click minimap to jump there">
+        <canvas ref="minimapCanvas" width="170" height="110"></canvas>
+        <span class="wb-minimap-label">MAP</span>
+      </div>
     </div>
-    <!-- Mini-map -->
-    <div class="wb-minimap" @click="onMinimapClick" title="Click minimap to jump there">
-      <canvas ref="minimapCanvas" width="170" height="110"></canvas>
-      <span class="wb-minimap-label">MAP</span>
+
+    <!-- Image panel sidebar -->
+    <div class="wb-img-panel" :class="{collapsed:!wbImgPanel}">
+      <div class="wb-img-panel-header">
+        🖼 <span>{{ roomImages.length }}</span> image{{ roomImages.length!==1?'s':'' }}
+      </div>
+      <div class="wb-img-list" v-if="roomImages.length">
+        <div class="wb-img-thumb" v-for="(img,i) in roomImages" :key="i"
+          @click="insertImageToWB(img.src)" :title="'Add to board · '+img.by">
+          <img :src="img.src"/>
+          <div class="wb-img-thumb-label">{{ img.by }} · {{ img.ts }}</div>
+          <div class="wb-img-thumb-add">+</div>
+        </div>
+      </div>
+      <div class="wb-img-empty" v-else>
+        <div style="font-size:28px">📭</div>
+        <div>No images shared in this room yet</div>
+      </div>
     </div>
-  </div>
+
+  </div><!-- .wb-body -->
 
   <!-- Bottom bar -->
   <div class="wb-users">
@@ -519,6 +764,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <img :src="lightboxSrc" @click.stop/>
   </div>
 </transition>
+
+<!-- Full reaction picker (floats at fixed position) -->
+<div v-if="reactPickerMsg" class="full-react-picker-fixed"
+  :style="{top:reactPickerPos.y+'px',left:reactPickerPos.x+'px'}"
+  @click.stop>
+  <button v-for="e in allReactEmoji" :key="e" class="act-btn" style="font-size:20px" @click.stop="reactMsg(reactPickerMsg,e);reactPickerMsg=null" :title="e">{{e}}</button>
+</div>
 
 </div><!-- #app -->
 
@@ -550,6 +802,10 @@ function drawArrow(ctx, x1,y1,x2,y2,lw){
   ctx.lineTo(x2-hl*Math.cos(a+Math.PI/6),y2-hl*Math.sin(a+Math.PI/6))
   ctx.closePath(); ctx.fillStyle=ctx.strokeStyle; ctx.fill()
 }
+
+// Module-scope so applyStroke (global fn) can read them
+const imgCache = {}       // src → HTMLImageElement
+let _selImg    = null     // currently selected wbimage stroke (for draw handles)
 
 function applyStroke(ctx, s){
   if(!s) return
@@ -592,6 +848,49 @@ function applyStroke(ctx, s){
       ctx.font=`${(s.size||4)*2+10}px DM Sans,sans-serif`
       ctx.textBaseline='top'
       ctx.fillText(s.txt||'',s.x1,s.y1); break
+    case 'wbimage':{
+      ctx.globalCompositeOperation='source-over'
+      if(imgCache[s.src]){
+        ctx.drawImage(imgCache[s.src], s.x, s.y, s.w, s.h)
+        if(_selImg===s){
+          ctx.save()
+          // Dashed selection border
+          ctx.strokeStyle='#6c8fff'; ctx.lineWidth=2
+          ctx.setLineDash([5,3])
+          ctx.strokeRect(s.x-1,s.y-1,s.w+2,s.h+2)
+          ctx.setLineDash([])
+          // Corner resize handles
+          const hs=10
+          ;[{x:s.x,y:s.y},{x:s.x+s.w,y:s.y},{x:s.x,y:s.y+s.h},{x:s.x+s.w,y:s.y+s.h}].forEach(c=>{
+            ctx.fillStyle='#fff'; ctx.strokeStyle='#6c8fff'; ctx.lineWidth=1.5
+            ctx.fillRect(c.x-hs/2,c.y-hs/2,hs,hs)
+            ctx.strokeRect(c.x-hs/2,c.y-hs/2,hs,hs)
+          })
+          // ✕ Delete button on top-right of image
+          const br=13
+          const bx=s.x+s.w, by=s.y
+          ctx.beginPath(); ctx.arc(bx,by,br,0,Math.PI*2)
+          ctx.fillStyle='#ef4444'; ctx.fill()
+          ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=1; ctx.stroke()
+          ctx.strokeStyle='#fff'; ctx.lineWidth=2.2; ctx.lineCap='round'
+          const d=5
+          ctx.beginPath(); ctx.moveTo(bx-d,by-d); ctx.lineTo(bx+d,by+d); ctx.stroke()
+          ctx.beginPath(); ctx.moveTo(bx+d,by-d); ctx.lineTo(bx-d,by+d); ctx.stroke()
+          // Hint label below image
+          ctx.font='11px DM Sans,sans-serif'
+          ctx.fillStyle='rgba(108,143,255,0.85)'
+          ctx.textAlign='center'; ctx.textBaseline='top'
+          ctx.fillText('drag to move  •  dbl-click to deselect', s.x+s.w/2, s.y+s.h+6)
+          ctx.textAlign='start'
+          ctx.restore()
+        }
+      } else {
+        const _img=new Image()
+        _img.onload=()=>{ imgCache[s.src]=_img; redrawAll() }
+        _img.src=s.src
+      }
+      break
+    }
   }
   ctx.restore()
 }
@@ -605,6 +904,7 @@ createApp({
     const form        = ref({username:'',room:''})
     const username    = ref('')
     const room        = ref('')
+    const mySid       = ref('')   // unique socket id — survives same-name collisions
     const users       = ref([])
     const messages    = ref([])
     const typers      = ref([])
@@ -613,6 +913,7 @@ createApp({
     const emojiQ      = ref('')
     const eCat        = ref('Smileys')
     const anchor      = ref(null)
+    const msgBox      = ref(null)
     const chatInput   = ref(null)
     const fileInput   = ref(null)
     const cameraInput = ref(null)
@@ -620,9 +921,40 @@ createApp({
     const pendingImage= ref(null)
     const lightboxSrc = ref(null)
     const hasHistory  = ref(false)
+    const replyingTo  = ref(null)    // message being replied to
+    const quickEmoji  = ['👍','❤️','😂','😮','😢','🔥','🎉','👀']
+    const allReactEmoji = [
+      '👍','👎','❤️','🔥','😂','😮','😢','😡',
+      '🎉','🙌','💯','⭐','🤩','😍','🥰','😭',
+      '🤣','😱','🤔','👏','💪','🙏','✅','❌',
+      '🚀','💡','👋','🫡','🥹','😤','🤯','💀'
+    ]
+    const reactPickerMsg = ref(null)
+    const reactPickerPos = ref({x:0,y:0})
+
+    function openReactPicker(m, e){
+      const rect = e.target.getBoundingClientRect()
+      reactPickerPos.value = {
+        x: Math.min(rect.left, window.innerWidth - 300),
+        y: rect.top - 60
+      }
+      reactPickerMsg.value = m
+    }
+    // Close picker when clicking anywhere
+    document.addEventListener('click', ()=>{ reactPickerMsg.value=null })
 
     // Whiteboard
     const showWB      = ref(false)
+    const wbImgPanel  = ref(false)
+    const selImgRef   = ref(null)   // mirrors _selImg so toolbar is reactive
+    const imgToolMode = ref('move') // 'move' | 'draw' — what clicking image body does
+
+    // All images shared in this room session (derived from messages)
+    const roomImages  = computed(()=>
+      messages.value
+        .filter(m=>m.kind==='image')
+        .map(m=>({src:m.image, by:m.username, ts:m.ts}))
+    )
     const wbCanvas    = ref(null)
     const wbWrap      = ref(null)
     const cursorCanvas= ref(null)
@@ -648,14 +980,18 @@ createApp({
     let strokes     = []      // world-space strokes
     let snapshot    = null    // ImageData for shape preview
     let drawing     = false
+    let iAmTyping   = false
+    let typingTimer = null
     let panning     = false
     let panStartX   = 0, panStartY = 0
     let panX        = 0, panY = 0   // current view offset (world origin in screen space)
     let lastWX      = 0, lastWY = 0 // last world coords
     let shapeStart  = {x:0,y:0}
     let penPts      = []
-
-    let socket=null, typingTimer=null, iAmTyping=false
+    // Image selection / drag / resize (selImg is module-scope _selImg; selHandle is local)
+    let selHandle   = null   // 'move' | 'tl'|'tr'|'bl'|'br'
+    let imgDragWX   = 0, imgDragWY = 0
+    let imgOrigX    = 0, imgOrigY = 0, imgOrigW = 0, imgOrigH = 0
 
     const eCats = Object.entries(EMOJIS).map(([n,v])=>({n,i:v.i}))
     const filteredEmoji = computed(()=>{
@@ -665,7 +1001,12 @@ createApp({
     const canJoin = computed(()=> form.value.username.trim()&&form.value.room.trim()&&screen.value==='join')
     const canSend = computed(()=> draft.value.trim()||pendingImage.value)
 
-    function scrollDown(){ nextTick(()=>anchor.value?.scrollIntoView({behavior:'smooth'})) }
+    function scrollDown(){
+      nextTick(()=>{
+        const box = msgBox.value
+        if(box) box.scrollTop = box.scrollHeight
+      })
+    }
     function isBigEmoji(t){ const s=t.trim(); return s.length<=8&&/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})+$/u.test(s) }
     function formatSize(b){ return b<1024?b+'B':b<1<<20?(b/1024).toFixed(1)+'KB':(b/(1<<20)).toFixed(1)+'MB' }
 
@@ -673,6 +1014,48 @@ createApp({
     // Convert screen coords → world coords
     function s2w(sx,sy){ return {x: sx-panX, y: sy-panY} }
     function w2s(wx,wy){ return {x: wx+panX, y: wy+panY} }
+
+    // Hit-test world point against a wbimage stroke
+    // Returns 'tl'|'tr'|'bl'|'br' for handles, 'move' for body, null for miss
+    function selectImg(s){
+      _selImg=s; selImgRef.value=s
+    }
+    function deselectImg(){
+      _selImg=null; selHandle=null; selImgRef.value=null
+    }
+    function deleteSelImg(){
+      if(!_selImg) return
+      const idx=strokes.indexOf(_selImg)
+      if(idx>=0) strokes.splice(idx,1)
+      socket?.emit('wb_img_delete',{room:room.value,src:_selImg.src,by:_selImg.by})
+      deselectImg(); redrawAll()
+    }
+
+    // Hit-test corner handles (only when image is selected)
+    function hitTestHandle(s, wx, wy){
+      const hs=12
+      const corners={tl:{x:s.x,y:s.y},tr:{x:s.x+s.w,y:s.y},bl:{x:s.x,y:s.y+s.h},br:{x:s.x+s.w,y:s.y+s.h}}
+      for(const [name,c] of Object.entries(corners)){
+        if(wx>=c.x-hs&&wx<=c.x+hs&&wy>=c.y-hs&&wy<=c.y+hs) return name
+      }
+      return null
+    }
+    // Hit-test delete button (circle at top-right corner of image)
+    function hitTestDeleteBtn(s, wx, wy){
+      const bx=s.x+s.w, by=s.y
+      return Math.hypot(wx-bx, wy-by) <= 16
+    }
+    // Hit-test image body
+    function hitTestImgBody(s, wx, wy){
+      return wx>=s.x && wx<=s.x+s.w && wy>=s.y && wy<=s.y+s.h
+    }
+
+    function imgCursorForHandle(h){
+      if(h==='move')   return 'move'
+      if(h==='tl'||h==='br') return 'nwse-resize'
+      if(h==='tr'||h==='bl') return 'nesw-resize'
+      return 'crosshair'
+    }
 
     function setTool(t){ wbTool.value=t; updateCursor() }
 
@@ -691,32 +1074,33 @@ createApp({
     }
 
     function drawGrid(){
-      if(!wbCtx) return
-      const cv=wbCanvas.value
+      const cv=wbCanvas.value; if(!cv) return
+      const ctx=getCtx(); if(!ctx) return
       const W=cv.width,H=cv.height
       const gridSize=40
-      // dot-grid starting from world origin
       const startX = ((panX%gridSize)+gridSize)%gridSize
       const startY = ((panY%gridSize)+gridSize)%gridSize
-      wbCtx.save()
-      wbCtx.fillStyle='rgba(255,255,255,0.06)'
+      ctx.save()
+      ctx.fillStyle='rgba(255,255,255,0.06)'
       for(let x=startX; x<W; x+=gridSize){
         for(let y=startY; y<H; y+=gridSize){
-          wbCtx.fillRect(x,y,1.5,1.5)
+          ctx.fillRect(x,y,1.5,1.5)
         }
       }
-      wbCtx.restore()
+      ctx.restore()
     }
 
     function redrawAll(){
-      const cv=wbCanvas.value; if(!cv||!wbCtx) return
-      wbCtx.clearRect(0,0,cv.width,cv.height)
-      wbCtx.fillStyle='#111118'; wbCtx.fillRect(0,0,cv.width,cv.height)
+      const cv=wbCanvas.value; if(!cv) return
+      const ctx=getCtx(); if(!ctx) return
+      ctx.clearRect(0,0,cv.width,cv.height)
+      ctx.fillStyle='#111118'; ctx.fillRect(0,0,cv.width,cv.height)
       drawGrid()
-      wbCtx.save()
-      wbCtx.translate(panX,panY)
-      strokes.forEach(s=>applyStroke(wbCtx,s))
-      wbCtx.restore()
+      ctx.save()
+      ctx.translate(panX,panY)
+      strokes.forEach(s=>{ try{ applyStroke(ctx,s) }catch(e){} })
+      ctx.restore()
+      ctx.setTransform(1,0,0,1,0,0)
     }
 
     function initCanvas(){
@@ -726,14 +1110,21 @@ createApp({
         cv.width  = wrap.clientWidth
         cv.height = wrap.clientHeight
         wbCtx = cv.getContext('2d')
-        // Size cursor overlay to match
         const cc=cursorCanvas.value
         if(cc){ cc.width=cv.width; cc.height=cv.height }
         redrawAll()
         updateCursor()
-        // Start minimap refresh loop
         startMinimapLoop()
       })
+    }
+
+    // Returns the live 2d context, re-acquiring it if the canvas element changed
+    function getCtx(){
+      const cv=wbCanvas.value; if(!cv) return null
+      if(!wbCtx || wbCtx.canvas !== cv){
+        wbCtx=cv.getContext('2d')
+      }
+      return wbCtx
     }
 
     // ── MINIMAP ──────────────────────────────────────
@@ -904,11 +1295,31 @@ createApp({
     }
 
     watch(showWB, v=>{ if(v) initCanvas() })
+    // When image panel opens/closes, canvas wrap resizes → reinit after CSS transition (200ms)
+    watch(wbImgPanel, ()=>{ if(showWB.value) setTimeout(initCanvas, 220) })
+    // Auto-open image panel when first image arrives and wb is open
+    watch(roomImages, (imgs, prev)=>{
+      if(showWB.value && imgs.length > (prev?.length||0)) wbImgPanel.value=true
+    })
 
     // ── Mouse events ─────────────────────────────────
+    function onDblClick(e){
+      // Double-click on image → select it (or deselect if clicking same one)
+      const {x,y}=getEvXY(e)
+      const w=s2w(x,y)
+      for(let i=strokes.length-1;i>=0;i--){
+        const s=strokes[i]; if(s.tool!=='wbimage') continue
+        if(hitTestImgBody(s,w.x,w.y)){
+          if(_selImg===s){ deselectImg(); redrawAll() }  // dbl-click again = deselect
+          else { selectImg(s); redrawAll() }
+          return
+        }
+      }
+      deselectImg(); redrawAll()
+    }
+
     function onMD(e){
       const {x,y}=getEvXY(e)
-      // Right mouse button = pan
       if(e.button===2){
         panning=true; panStartX=x-panX; panStartY=y-panY
         wbCanvas.value.style.cursor='grabbing'; return
@@ -918,11 +1329,40 @@ createApp({
         wbCanvas.value.style.cursor='grabbing'; return
       }
       if(wbTool.value==='text'){ placeText(x,y); return }
+
       const w=s2w(x,y)
+
+      // If an image is currently selected — check its handles and delete button first
+      if(_selImg){
+        // Delete button hit?
+        if(hitTestDeleteBtn(_selImg,w.x,w.y)){ deleteSelImg(); return }
+        // Corner resize handle?
+        const corner=hitTestHandle(_selImg,w.x,w.y)
+        if(corner){
+          selHandle=corner
+          imgDragWX=w.x; imgDragWY=w.y
+          imgOrigX=_selImg.x; imgOrigY=_selImg.y; imgOrigW=_selImg.w; imgOrigH=_selImg.h
+          wbCanvas.value.style.cursor=imgCursorForHandle(corner)
+          return
+        }
+        // Body drag — move the image
+        if(hitTestImgBody(_selImg,w.x,w.y)){
+          selHandle='move'
+          imgDragWX=w.x; imgDragWY=w.y
+          imgOrigX=_selImg.x; imgOrigY=_selImg.y; imgOrigW=_selImg.w; imgOrigH=_selImg.h
+          wbCanvas.value.style.cursor='move'
+          return
+        }
+        // Clicked outside selected image — deselect, then draw normally
+        deselectImg(); redrawAll()
+      }
+
+      // Default — start drawing (no image interception)
       drawing=true; shapeStart={x:w.x,y:w.y}; lastWX=w.x; lastWY=w.y
       penPts=[{x:w.x,y:w.y}]
       if(['line','rect','circle','arrow'].includes(wbTool.value)){
-        snapshot=wbCtx.getImageData(0,0,wbCanvas.value.width,wbCanvas.value.height)
+        const ctx=getCtx()
+        if(ctx) snapshot=ctx.getImageData(0,0,wbCanvas.value.width,wbCanvas.value.height)
       }
       socket?.emit('wb_segment',{room:room.value,username:username.value,drawing:true})
     }
@@ -931,41 +1371,91 @@ createApp({
       const {x,y}=getEvXY(e)
       const w=s2w(x,y)
       wbCoordsLabel.value=`${Math.round(w.x)}, ${Math.round(w.y)}`
-
-      // Broadcast my cursor position to others
       socket?.emit('wb_cursor',{room:room.value,username:username.value,wx:w.x,wy:w.y})
 
+      // ── Pan mode ─────────────────────────────────────
       if(panning){
         panX=x-panStartX; panY=y-panStartY
         redrawAll(); drawCursors(); return
       }
-      if(!drawing||!wbCtx) return
-      const wc=s2w(x,y)
+
+      // ── Image drag / resize ──────────────────────────
+      if(_selImg && selHandle){
+        const dx=w.x-imgDragWX, dy=w.y-imgDragWY
+        const s=_selImg
+        if(selHandle==='move'){
+          s.x=imgOrigX+dx; s.y=imgOrigY+dy
+        } else if(selHandle==='br'){
+          s.w=Math.max(40,imgOrigW+dx); s.h=Math.max(30,imgOrigH+dy)
+        } else if(selHandle==='tr'){
+          const newH=Math.max(30,imgOrigH-dy)
+          s.y=imgOrigY+imgOrigH-newH; s.h=newH; s.w=Math.max(40,imgOrigW+dx)
+        } else if(selHandle==='bl'){
+          const newW=Math.max(40,imgOrigW-dx)
+          s.x=imgOrigX+imgOrigW-newW; s.w=newW; s.h=Math.max(30,imgOrigH+dy)
+        } else if(selHandle==='tl'){
+          const newW=Math.max(40,imgOrigW-dx), newH=Math.max(30,imgOrigH-dy)
+          s.x=imgOrigX+imgOrigW-newW; s.y=imgOrigY+imgOrigH-newH
+          s.w=newW; s.h=newH
+        }
+        redrawAll(); return
+      }
+
+      // ── Not actively drawing — just update cursor ────
+      if(!drawing){
+        if(_selImg){
+          // Show appropriate cursor only for the selected image's handles/delete
+          if(hitTestDeleteBtn(_selImg,w.x,w.y)){
+            wbCanvas.value.style.cursor='pointer'
+          } else {
+            const corner=hitTestHandle(_selImg,w.x,w.y)
+            if(corner){ wbCanvas.value.style.cursor=imgCursorForHandle(corner) }
+            else if(hitTestImgBody(_selImg,w.x,w.y)){ wbCanvas.value.style.cursor='move' }
+            else { updateCursor() }
+          }
+        } else {
+          updateCursor()
+        }
+        return
+      }
+
+      // ── Active drawing ────────────────────────────────
+      const ctx=getCtx(); if(!ctx) return
       const tool=wbTool.value
 
       if(tool==='pen'||tool==='eraser'){
-        wbCtx.save()
-        wbCtx.strokeStyle=tool==='eraser'?'#111118':wbColor.value
-        wbCtx.lineWidth=wbSize.value; wbCtx.lineCap='round'; wbCtx.lineJoin='round'
-        wbCtx.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over'
-        const sp=w2s(lastWX,lastWY), sc=w2s(wc.x,wc.y)
-        wbCtx.beginPath(); wbCtx.moveTo(sp.x,sp.y); wbCtx.lineTo(sc.x,sc.y); wbCtx.stroke()
-        wbCtx.restore()
-        penPts.push({x:wc.x,y:wc.y})
+        ctx.save()
+        ctx.strokeStyle=tool==='eraser'?'#111118':wbColor.value
+        ctx.lineWidth=wbSize.value; ctx.lineCap='round'; ctx.lineJoin='round'
+        ctx.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over'
+        const sp=w2s(lastWX,lastWY), sc=w2s(w.x,w.y)
+        ctx.beginPath(); ctx.moveTo(sp.x,sp.y); ctx.lineTo(sc.x,sc.y); ctx.stroke()
+        ctx.restore()
+        penPts.push({x:w.x,y:w.y})
         socket?.emit('wb_segment',{room:room.value,username:username.value,
-          seg:{x1:lastWX,y1:lastWY,x2:wc.x,y2:wc.y,color:wbColor.value,size:wbSize.value,tool}})
-        lastWX=wc.x; lastWY=wc.y
+          seg:{x1:lastWX,y1:lastWY,x2:w.x,y2:w.y,color:wbColor.value,size:wbSize.value,tool}})
+        lastWX=w.x; lastWY=w.y
       } else {
-        if(snapshot) wbCtx.putImageData(snapshot,0,0)
-        wbCtx.save(); wbCtx.translate(panX,panY)
-        applyStroke(wbCtx,{tool,color:wbColor.value,size:wbSize.value,fill:wbFill.value,
-          x1:shapeStart.x,y1:shapeStart.y,x2:wc.x,y2:wc.y})
-        wbCtx.restore()
+        if(snapshot) ctx.putImageData(snapshot,0,0)
+        ctx.save(); ctx.translate(panX,panY)
+        applyStroke(ctx,{tool,color:wbColor.value,size:wbSize.value,fill:wbFill.value,
+          x1:shapeStart.x,y1:shapeStart.y,x2:w.x,y2:w.y})
+        ctx.restore()
       }
     }
 
-    function onMU(e){ if(e.button===2){stopPan();return} finishStroke(getEvXY(e)) }
-    function onML(e){ if(panning){stopPan();return} if(drawing) finishStroke(getEvXY(e)) }
+    function onMU(e){
+      if(e.button===2){stopPan();return}
+      // Finish image drag — broadcast updated position
+      if(_selImg && selHandle){
+        selHandle=null
+        socket?.emit('wb_img_move',{room:room.value,
+          stroke:{tool:'wbimage',x:_selImg.x,y:_selImg.y,w:_selImg.w,h:_selImg.h,src:_selImg.src,by:_selImg.by}})
+        redrawAll(); return
+      }
+      finishStroke(getEvXY(e))
+    }
+    function onML(e){ if(panning){stopPan();return} if(selHandle){selHandle=null;return} if(drawing) finishStroke(getEvXY(e)) }
 
     function stopPan(){ panning=false; updateCursor() }
 
@@ -976,12 +1466,11 @@ createApp({
         penPts.push({x:wc.x,y:wc.y})
         stroke={tool,color:wbColor.value,size:wbSize.value,pts:penPts,by:username.value}
       } else {
-        if(snapshot){wbCtx.putImageData(snapshot,0,0);snapshot=null}
+        snapshot=null
         stroke={tool,color:wbColor.value,size:wbSize.value,fill:wbFill.value,
           x1:shapeStart.x,y1:shapeStart.y,x2:wc.x,y2:wc.y,by:username.value}
-        wbCtx.save(); wbCtx.translate(panX,panY); applyStroke(wbCtx,stroke); wbCtx.restore()
       }
-      strokes.push(stroke)
+      strokes.push(stroke); redrawAll()
       socket?.emit('wb_stroke',{room:room.value,stroke})
       socket?.emit('wb_segment',{room:room.value,username:username.value,drawing:false})
     }
@@ -1002,9 +1491,9 @@ createApp({
     function tXY(touch){ const r=tRect(); return{x:touch.clientX-r.left, y:touch.clientY-r.top} }
     function tMid(e){ const r=tRect(),a=e.touches[0],b=e.touches[1]; return{x:(a.clientX+b.clientX)/2-r.left, y:(a.clientY+b.clientY)/2-r.top} }
 
+    let lastTapTime=0, lastTapX=0, lastTapY=0
     function onTD(e){
       if(e.touches.length>=2){
-        // Cancel any single-finger draw that was in progress
         if(drawing){ drawing=false; snapshot=null }
         twoFingerPan=true
         const m=tMid(e); tMidX=m.x; tMidY=m.y; tPanStartX=panX; tPanStartY=panY
@@ -1012,9 +1501,15 @@ createApp({
         return
       }
       twoFingerPan=false
-      const {x,y}=tXY(e.touches[0])
-      // Simulate mousedown — button 0 for draw, button 2 would pan
-      onMD({clientX:e.touches[0].clientX, clientY:e.touches[0].clientY, button:wbTool.value==='pan'?2:0})
+      // Detect double-tap (within 300ms and 30px)
+      const now=Date.now()
+      const tx=e.touches[0].clientX, ty=e.touches[0].clientY
+      if(now-lastTapTime<300 && Math.hypot(tx-lastTapX,ty-lastTapY)<30){
+        onDblClick({clientX:tx, clientY:ty})
+        lastTapTime=0; return
+      }
+      lastTapTime=now; lastTapX=tx; lastTapY=ty
+      onMD({clientX:tx, clientY:ty, button:wbTool.value==='pan'?2:0})
     }
 
     function onTM(e){
@@ -1061,7 +1556,7 @@ createApp({
         if(txt){
           const stroke={tool:'text',color:wbColor.value,size:wbSize.value,txt,x1:wc.x,y1:wc.y,by:username.value}
           strokes.push(stroke)
-          wbCtx.save(); wbCtx.translate(panX,panY); applyStroke(wbCtx,stroke); wbCtx.restore()
+          redrawAll()
           socket?.emit('wb_stroke',{room:room.value,stroke})
         }
         wrap.removeChild(inp)
@@ -1098,34 +1593,56 @@ createApp({
       socket.on('connect_error',()=>{ errMsg.value='Cannot reach server. Is Flask running?'; socket.disconnect(); socket=null })
       socket.on('joined',(d)=>{
         users.value=d.users
+        mySid.value=d.sid            // unique identity — even if names collide
+        username.value=d.username
+        room.value=d.room
         if(d.history?.length){messages.value=d.history;hasHistory.value=true}
         messages.value.push({kind:'event',text:`You joined #${d.room}`,ts:d.ts})
         if(d.board?.length){strokes=d.board; if(showWB.value) redrawAll()}
         screen.value='chat'; scrollDown()
       })
       socket.on('user_joined',(d)=>{ users.value=d.users; messages.value.push({kind:'event',text:`${d.username} joined the room`,ts:d.ts}); scrollDown() })
-      socket.on('user_left',(d)=>{ users.value=d.users; typers.value=typers.value.filter(u=>u!==d.username); delete wbDrawers.value[d.username]; delete remoteCursors[d.username]; messages.value.push({kind:'event',text:`${d.username} left the room`,ts:d.ts}); scrollDown() })
+      socket.on('user_left',(d)=>{ users.value=d.users; typers.value=typers.value.filter(t=>t.sid!==d.sid); delete wbDrawers.value[d.username]; delete remoteCursors[d.username]; messages.value.push({kind:'event',text:`${d.username} left the room`,ts:d.ts}); scrollDown() })
       socket.on('new_msg',(d)=>{ messages.value.push(d); scrollDown() })
-      socket.on('typing',(d)=>{ if(!typers.value.includes(d.username)) typers.value.push(d.username) })
-      socket.on('stop_typing',(d)=>{ typers.value=typers.value.filter(u=>u!==d.username) })
+      socket.on('reaction_update',(d)=>{
+        const msg = messages.value.find(m=>m.id===d.msg_id)
+        if(msg) msg.reactions = d.reactions
+      })
+      socket.on('typing',(d)=>{ if(!typers.value.find(t=>t.sid===d.sid)) typers.value.push({sid:d.sid,username:d.username}) })
+      socket.on('stop_typing',(d)=>{ typers.value=typers.value.filter(t=>t.sid!==d.sid) })
       socket.on('disconnect',()=>{ if(screen.value==='chat') messages.value.push({kind:'event',text:'Disconnected',ts:''}) })
 
       // Whiteboard
       socket.on('wb_segment',(d)=>{
         if(!d) return
         if(d.username){ if(d.drawing) wbDrawers.value[d.username]=true; else delete wbDrawers.value[d.username] }
-        if(!d.seg||!wbCtx||!showWB.value) return
+        if(!d.seg||!showWB.value) return
+        const ctx=getCtx(); if(!ctx) return
         const {x1,y1,x2,y2,color,size,tool}=d.seg
-        wbCtx.save(); wbCtx.translate(panX,panY)
-        wbCtx.strokeStyle=tool==='eraser'?'#111118':color
-        wbCtx.lineWidth=size; wbCtx.lineCap='round'; wbCtx.lineJoin='round'
-        wbCtx.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over'
-        wbCtx.beginPath(); wbCtx.moveTo(x1,y1); wbCtx.lineTo(x2,y2); wbCtx.stroke()
-        wbCtx.restore()
+        ctx.save(); ctx.translate(panX,panY)
+        ctx.strokeStyle=tool==='eraser'?'#111118':color
+        ctx.lineWidth=size; ctx.lineCap='round'; ctx.lineJoin='round'
+        ctx.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over'
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke()
+        ctx.restore()
       })
-      socket.on('wb_stroke',(d)=>{ if(!d?.stroke) return; strokes.push(d.stroke); if(wbCtx&&showWB.value){wbCtx.save();wbCtx.translate(panX,panY);applyStroke(wbCtx,d.stroke);wbCtx.restore()} })
-      socket.on('wb_clear',()=>{ strokes=[]; if(wbCtx&&showWB.value) redrawAll() })
-      socket.on('wb_state',(d)=>{ strokes=d.board||[]; if(wbCtx&&showWB.value) redrawAll() })
+      socket.on('wb_stroke',(d)=>{ if(!d?.stroke) return; strokes.push(d.stroke); if(showWB.value) redrawAll() })
+      socket.on('wb_clear',()=>{ strokes=[]; deselectImg(); if(showWB.value) redrawAll() })
+      socket.on('wb_img_delete',(d)=>{
+        if(!d) return
+        const idx=strokes.findIndex(s=>s.tool==='wbimage'&&s.src===d.src&&s.by===d.by)
+        if(idx>=0) strokes.splice(idx,1)
+        if(_selImg && _selImg.src===d.src) deselectImg()
+        if(showWB.value) redrawAll()
+      })
+      socket.on('wb_state',(d)=>{ strokes=d.board||[]; if(showWB.value) redrawAll() })
+      socket.on('wb_img_move',(d)=>{
+        // Find matching image by src and update position/size
+        if(!d?.stroke) return
+        const s=strokes.find(s=>s.tool==='wbimage'&&s.src===d.stroke.src&&s.by===d.stroke.by)
+        if(s){ s.x=d.stroke.x; s.y=d.stroke.y; s.w=d.stroke.w; s.h=d.stroke.h }
+        if(showWB.value) redrawAll()
+      })
       socket.on('wb_cursor',(d)=>{
         if(!d||!d.username) return
         // Get user color from users list
@@ -1140,20 +1657,83 @@ createApp({
     function doLeave(){
       if(socket){socket.emit('leave',{username:username.value,room:room.value});socket.disconnect();socket=null}
       screen.value='join'; messages.value=[];users.value=[];typers.value=[];draft.value='';errMsg.value='';
-      sidebarOpen.value=false;pendingImage.value=null;hasHistory.value=false;
-      showWB.value=false;strokes=[];remoteCursors={};stopMinimapLoop()
+      sidebarOpen.value=false;pendingImage.value=null;hasHistory.value=false;replyingTo.value=null;
+      showWB.value=false;strokes=[];remoteCursors={};stopMinimapLoop();wbImgPanel.value=false
     }
+
     function doSend(){
       if(!socket) return
+      const reply = replyingTo.value ? {
+        id: replyingTo.value.id,
+        username: replyingTo.value.username,
+        kind: replyingTo.value.kind,
+        message: replyingTo.value.message||'',
+        image: replyingTo.value.kind==='image' ? replyingTo.value.image : undefined
+      } : null
       if(pendingImage.value){
-        socket.emit('send_image',{username:username.value,room:room.value,image:pendingImage.value.dataUrl})
-        pendingImage.value=null
-        if(draft.value.trim()){socket.emit('send_msg',{username:username.value,room:room.value,message:draft.value.trim()});draft.value='';stopTyping();nextTick(()=>{if(chatInput.value)chatInput.value.style.height='auto'})}
+        socket.emit('send_image',{username:username.value,room:room.value,image:pendingImage.value.dataUrl,replyTo:reply})
+        pendingImage.value=null; replyingTo.value=null
+        if(draft.value.trim()){socket.emit('send_msg',{username:username.value,room:room.value,message:draft.value.trim(),replyTo:null});draft.value='';stopTyping();nextTick(()=>{if(chatInput.value)chatInput.value.style.height='auto'})}
         return
       }
       const msg=draft.value.trim(); if(!msg) return
-      socket.emit('send_msg',{username:username.value,room:room.value,message:msg})
-      draft.value=''; stopTyping(); nextTick(()=>{if(chatInput.value)chatInput.value.style.height='auto'})
+      socket.emit('send_msg',{username:username.value,room:room.value,message:msg,replyTo:reply})
+      draft.value=''; replyingTo.value=null; stopTyping(); nextTick(()=>{if(chatInput.value)chatInput.value.style.height='auto'})
+    }
+
+    // ── Reactions ─────────────────────────────────────────
+    function reactMsg(m, emoji){
+      if(!socket||!m.id) return
+      socket.emit('react_msg',{room:room.value,msg_id:m.id,emoji})
+    }
+
+    // ── Reply ─────────────────────────────────────────────
+    function startReply(m){
+      replyingTo.value=m
+      nextTick(()=>chatInput.value?.focus())
+    }
+
+    function scrollToMsg(msgId){
+      if(!msgId) return
+      const el=document.querySelector(`[data-msgid="${msgId}"]`)
+      if(!el) return
+      el.scrollIntoView({behavior:'smooth',block:'center'})
+      el.classList.add('highlighted')
+      setTimeout(()=>el.classList.remove('highlighted'),1200)
+    }
+
+    // ── Insert image into whiteboard ──────────────────────
+    function insertImageToWB(dataUrl){
+      if(!showWB.value) showWB.value=true
+      // Always defer one tick so DOM/canvas is settled
+      nextTick(()=>_doInsertImage(dataUrl))
+    }
+    function _doInsertImage(dataUrl){
+      const doInsert=(img)=>{
+        // Always get LIVE canvas — not a stale closure
+        const cv=wbCanvas.value; if(!cv) return
+        const ctx=getCtx(); if(!ctx) return
+        imgCache[dataUrl]=img
+        const W=cv.width, H=cv.height
+        const maxW=Math.min(400, W*0.6)
+        const scale=img.width>0 ? Math.min(maxW/img.width, maxW/img.height, 1) : 1
+        const iw=Math.max(40, img.width*scale), ih=Math.max(30, img.height*scale)
+        // Center in current visible viewport (world coords)
+        const wx=-panX + W/2 - iw/2
+        const wy=-panY + H/2 - ih/2
+        const stroke={tool:'wbimage',by:username.value,x:wx,y:wy,w:iw,h:ih,src:dataUrl}
+        strokes.push(stroke)
+        selectImg(stroke); selHandle=null; imgToolMode.value='move'
+        redrawAll()
+        socket?.emit('wb_stroke',{room:room.value,stroke})
+      }
+      if(imgCache[dataUrl]){ doInsert(imgCache[dataUrl]) }
+      else {
+        const img=new Image()
+        img.onload=()=>doInsert(img)
+        img.onerror=()=>console.warn('wbimage load failed:', dataUrl.slice(0,40))
+        img.src=dataUrl
+      }
     }
     function onInput(){
       const el=chatInput.value
@@ -1182,14 +1762,17 @@ createApp({
     onUnmounted(()=>{ if(socket) socket.disconnect(); window.removeEventListener('resize',onResize); stopMinimapLoop() })
 
     return {
-      screen,errMsg,form,username,room,users,messages,typers,
+      screen,errMsg,form,username,room,mySid,users,messages,typers,
       draft,showEmoji,emojiQ,eCat,eCats,filteredEmoji,canJoin,canSend,
-      anchor,chatInput,fileInput,cameraInput,sidebarOpen,pendingImage,lightboxSrc,hasHistory,
-      showWB,wbCanvas,wbWrap,cursorCanvas,minimapCanvas,
+      anchor,msgBox,chatInput,fileInput,cameraInput,sidebarOpen,pendingImage,lightboxSrc,hasHistory,
+      replyingTo,quickEmoji,allReactEmoji,reactPickerMsg,reactPickerPos,openReactPicker,
+      showWB,wbImgPanel,roomImages,wbCanvas,wbWrap,cursorCanvas,minimapCanvas,
       wbTool,wbColor,wbSize,wbFill,wbPalette,wbDrawers,wbCoordsLabel,hexInput,onHexInput,
+      selImgRef,deleteSelImg,
       setTool,toggleWB,wbUndo,wbClearConfirm,fitAll,goHome,jumpToUser,onMinimapClick,
-      onMD,onMM,onMU,onML,onWheel,onTD,onTM,onTU,
-      doJoin,doLeave,doSend,onInput,pickEmoji,isBigEmoji,onFileChange
+      onMD,onMM,onMU,onML,onDblClick,onWheel,onTD,onTM,onTU,
+      doJoin,doLeave,doSend,onInput,pickEmoji,isBigEmoji,onFileChange,
+      reactMsg,startReply,scrollToMsg,insertImageToWB,_doInsertImage
     }
   }
 }).mount('#app')
