@@ -114,24 +114,26 @@ def on_image(data):
 
 @socketio.on("react_msg")
 def on_react(data):
-    """Toggle a reaction emoji on a message."""
+    """One reaction per user per message — toggling same emoji removes it, picking new one replaces old."""
     room     = data["room"]
     msg_id   = data["msg_id"]
     emoji    = data["emoji"]
-    user_sid = request.sid          # use sid, not username — unique per connection
+    user_sid = request.sid
     for msg in history.get(room, []):
         if msg.get("id") == msg_id:
             if "reactions" not in msg:
                 msg["reactions"] = {}
-            sids_reacted = msg["reactions"].get(emoji, [])
-            if user_sid in sids_reacted:
-                sids_reacted.remove(user_sid)
-            else:
-                sids_reacted.append(user_sid)
-            if sids_reacted:
-                msg["reactions"][emoji] = sids_reacted
-            elif emoji in msg["reactions"]:
-                del msg["reactions"][emoji]
+            # Check if user already reacted with THIS emoji → toggle off
+            already_on_this = user_sid in msg["reactions"].get(emoji, [])
+            # Remove user from ALL emojis first (one reaction per user)
+            for e in list(msg["reactions"].keys()):
+                if user_sid in msg["reactions"][e]:
+                    msg["reactions"][e].remove(user_sid)
+                if not msg["reactions"][e]:
+                    del msg["reactions"][e]
+            # If they weren't on this emoji before, add them now
+            if not already_on_this:
+                msg["reactions"].setdefault(emoji, []).append(user_sid)
             break
     emit("reaction_update", {"msg_id": msg_id, "reactions": msg.get("reactions", {})}, to=room)
 

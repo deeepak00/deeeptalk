@@ -2,9 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#0d0f14"/>
+
+<!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="deeepTalk"/>
+
+<!-- Android / general -->
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="application-name" content="deeepTalk"/>
+<meta name="description" content="Chat with anyone, anywhere, anytime"/>
+
 <title>deeepTalk — Chat with anyone, anywhere, anytime</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -93,13 +106,13 @@ html,body{
 .ev-msg{text-align:center;font-size:12px;color:var(--muted);padding:6px 0;display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0}
 .ev-line{flex:1;height:1px;background:var(--border);max-width:80px}
 .ev-tag{background:var(--panel);border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:11.5px}
-.msg-group{display:flex;flex-direction:column;margin-top:10px}
+.msg-group{display:flex;flex-direction:column;margin-top:10px;align-items:flex-start}
 .msg-group.own{align-items:flex-end}
 .msg-meta{display:flex;align-items:center;gap:7px;margin-bottom:4px;padding:0 4px}
 .msg-group.own .msg-meta{flex-direction:row-reverse}
 .mavatar{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
 .muser{font-size:12.5px;font-weight:600}.mtime{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
-.bubble{max-width:500px;padding:9px 13px;border-radius:14px;font-size:14.5px;line-height:1.5;word-break:break-word;background:var(--panel);border:1px solid var(--border);border-top-left-radius:4px}
+.bubble{max-width:500px;padding:9px 13px;border-radius:14px;font-size:14.5px;line-height:1.5;word-break:break-word;white-space:pre-wrap;background:var(--panel);border:1px solid var(--border);border-top-left-radius:4px}
 .msg-group.own .bubble{background:var(--own-msg);border-color:rgba(108,143,255,.25);border-top-right-radius:4px;border-top-left-radius:14px}
 .bubble.big-emoji{background:transparent!important;border:none!important;font-size:32px;padding:2px 4px}
 
@@ -606,7 +619,7 @@ html,body{
       </transition>
       <div class="input-box">
         <textarea class="chat-input" v-model="draft" ref="chatInput" placeholder="Type a message…" rows="1"
-          @keydown.enter.exact.prevent="doSend" @input="onInput"></textarea>
+          @keydown.enter.exact.prevent="onEnterKey" @input="onInput"></textarea>
         <div class="iactions">
           <input type="file" ref="fileInput" accept="image/*" style="display:none" @change="onFileChange"/>
           <input type="file" ref="cameraInput" accept="image/*" capture="environment" style="display:none" @change="onFileChange"/>
@@ -1735,6 +1748,19 @@ createApp({
         img.src=dataUrl
       }
     }
+    const isTouchDevice = () => navigator.maxTouchPoints > 0 || 'ontouchstart' in window
+    function onEnterKey(e){
+      if(isTouchDevice()){
+        // Mobile/tablet — Enter inserts newline, send only via button
+        const el=chatInput.value; if(!el) return
+        const start=el.selectionStart, end=el.selectionEnd
+        draft.value=draft.value.slice(0,start)+'\n'+draft.value.slice(end)
+        nextTick(()=>{ el.selectionStart=el.selectionEnd=start+1; onInput() })
+      } else {
+        // Desktop — Enter sends (Shift+Enter = newline, handled by browser)
+        doSend()
+      }
+    }
     function onInput(){
       const el=chatInput.value
       if(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
@@ -1771,11 +1797,20 @@ createApp({
       selImgRef,deleteSelImg,
       setTool,toggleWB,wbUndo,wbClearConfirm,fitAll,goHome,jumpToUser,onMinimapClick,
       onMD,onMM,onMU,onML,onDblClick,onWheel,onTD,onTM,onTU,
-      doJoin,doLeave,doSend,onInput,pickEmoji,isBigEmoji,onFileChange,
+      doJoin,doLeave,doSend,onEnterKey,onInput,pickEmoji,isBigEmoji,onFileChange,
       reactMsg,startReply,scrollToMsg,insertImageToWB,_doInsertImage
     }
   }
 }).mount('#app')
+</script>
+
+<script>
+// Register service worker for PWA install + offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}
 </script>
 </body>
 </html>
