@@ -1,4 +1,4 @@
-const CACHE = 'deeeptalk-v1'
+const CACHE = 'deeeptalk-v2'
 const OFFLINE_URL = '/offline'
 
 // Assets to cache on install

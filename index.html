@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content"/>
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json"/>
@@ -39,10 +39,12 @@ html,body{
   font-family:'DM Sans',sans-serif;
 }
 #app{
-  height:100dvh;         /* dvh = shrinks when mobile keyboard opens */
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
+  position: fixed;       /* locks to screen — keyboard can't push it */
+  top: 0; left: 0; right: 0;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* JOIN */
@@ -51,7 +53,8 @@ html,body{
 .join-wrap::after{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(167,139,250,.10) 0%,transparent 70%);bottom:-100px;right:-100px;pointer-events:none}
 .join-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 32px 80px rgba(0,0,0,.5)}
 .logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
-.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-icon{width:42px;height:42px;border-radius:10px;overflow:hidden;flex-shrink:0}
+.logo-icon img{width:100%;height:100%;display:block}
 .logo-text{font-size:22px;font-weight:600}.logo-text span{color:var(--accent)}
 .join-title{font-size:26px;font-weight:600;margin-bottom:6px;letter-spacing:-.5px}
 .join-sub{color:var(--muted);font-size:14px;margin-bottom:28px}
@@ -455,7 +458,7 @@ html,body{
 <!-- JOIN -->
 <div v-if="screen==='join'" class="join-wrap">
   <div class="join-card">
-    <div class="logo"><div class="logo-icon">💬</div><div class="logo-text"><span>deeep</span>Talk</div></div>
+    <div class="logo"><div class="logo-icon"><img src="/icon-192.png" alt="deeepTalk"/></div><div class="logo-text"><span>deeep</span>Talk</div></div>
     <div class="join-title">Join a room</div>
     <div class="join-sub">Chat with anyone, anywhere, anytime.</div>
     <div class="field"><label>Your name</label><input v-model="form.username" placeholder="e.g. Alex" maxlength="24" @keyup.enter="doJoin" autofocus/></div>
@@ -468,7 +471,7 @@ html,body{
 
 <!-- CONNECTING -->
 <div v-if="screen==='connecting'" class="connecting-wrap">
-  <div class="logo"><div class="logo-icon">💬</div><div class="logo-text"><span>deeep</span>Talk</div></div>
+  <div class="logo"><div class="logo-icon"><img src="/icon-192.png" alt="deeepTalk"/></div><div class="logo-text"><span>deeep</span>Talk</div></div>
   <div class="conn-text">Connecting to <strong style="color:var(--accent)">#{{ form.room }}</strong>…</div>
   <div class="dots"><span></span><span></span><span></span></div>
   <div v-if="errMsg" class="err-box" style="max-width:340px">⚠ {{ errMsg }}</div>
@@ -497,7 +500,7 @@ html,body{
   <div class="chat-main" @click="showEmoji=false">
     <div class="topbar">
       <button class="menu-btn" @click.stop="sidebarOpen=!sidebarOpen">☰</button>
-      <span style="font-size:20px">💬</span>
+      <img src="/icon-192.png" style="width:28px;height:28px;border-radius:7px;flex-shrink:0"/>
       <span class="topbar-title"><span>deeep</span>Talk</span>
       <span class="topbar-room">/ {{ room }}</span>
       <div class="topbar-right">
@@ -1805,7 +1808,18 @@ createApp({
 </script>
 
 <script>
-// Register service worker for PWA install + offline support
+// iOS keyboard fix — visualViewport shrinks when keyboard opens
+// This pins the #app to the actual visible height so nothing shifts
+if (window.visualViewport) {
+  const app = document.getElementById('app')
+  const onResize = () => {
+    app.style.height = window.visualViewport.height + 'px'
+  }
+  window.visualViewport.addEventListener('resize', onResize)
+  window.visualViewport.addEventListener('scroll', onResize)
+  onResize()
+}
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {})
