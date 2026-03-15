@@ -14,7 +14,20 @@ rooms   = {}   # rooms[room]  = { sid: {username, color} }
 history = {}   # history[room] = [ msg, ... ]
 boards  = {}   # boards[room]  = [ stroke, ... ]  (persistent until room destroyed)
 
-COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#F7DC6F","#DDA0DD","#98D8C8","#BB8FCE","#85C1E9","#F0A500"]
+COLORS = [
+    "#FF4B4B",  # vivid red
+    "#FF9500",  # orange
+    "#FFD600",  # yellow
+    "#4CD964",  # green
+    "#00C7BE",  # teal
+    "#0A84FF",  # blue
+    "#5E5CE6",  # indigo
+    "#BF5AF2",  # purple
+    "#FF2D78",  # pink
+    "#00B386",  # emerald
+    "#FF6B00",  # deep orange
+    "#00CFFF",  # cyan
+]
 
 @app.route('/')
 def index():
@@ -48,9 +61,9 @@ def push_history(room, msg):
 
 @socketio.on("join")
 def on_join(data):
-    uname = data["username"].strip()
-    room  = data["room"].strip()
-    sid   = request.sid
+    uname  = data["username"].strip()
+    room   = data["room"].strip()
+    sid    = request.sid
     join_room(room)
     if room not in rooms:
         rooms[room] = {}
@@ -77,8 +90,8 @@ def on_leave(data):
 @socketio.on("send_msg")
 def on_msg(data):
     room  = data["room"]
-    sid   = request.sid
-    color = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
+    sid    = request.sid
+    color  = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
     msg = {
         "kind": "msg",
         "id": f"{request.sid}_{ts()}_{len(history.get(room,[]))}",
@@ -96,8 +109,8 @@ def on_msg(data):
 @socketio.on("send_image")
 def on_image(data):
     room  = data["room"]
-    sid   = request.sid
-    color = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
+    sid    = request.sid
+    color  = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
     msg = {
         "kind": "image",
         "id": f"{request.sid}_{ts()}_{len(history.get(room,[]))}",
