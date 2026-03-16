@@ -472,57 +472,6 @@ html,body{
   .wb-fab{width:42px;height:42px}
   .icon-btn,.send-btn{width:42px;height:42px}
 }
-
-/* ── ALQUERQUE GAME ── */
-:root{--p1:#e74c3c;--p2:#3498db}
-.game-screen{display:flex;flex-direction:column;height:100%;width:100%}
-.header{height:52px;background:#10121c;border-bottom:1px solid #1e2030;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0}
-.pi{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
-.pi.r{flex-direction:row-reverse;text-align:right}
-.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;color:#fff}
-.pname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcap{font-size:11px;color:#6b7280}
-.tmid{flex-shrink:0;text-align:center;padding:0 6px}
-.turn-pill{font-size:11px;font-weight:600;padding:3px 12px;border-radius:99px;white-space:nowrap}
-.body{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:12px;position:relative}
-.footer{height:44px;background:#10121c;border-top:1px solid #1e2030;display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0}
-.finfo{font-size:12px;color:#6b7280}
-.fbtns{display:flex;gap:8px}
-.fbtn{padding:6px 13px;border-radius:7px;border:1px solid #2d2d4a;background:transparent;color:#a0a0c0;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .12s}
-.fbtn:hover{background:#1a1e28;color:#fff}
-.fbtn.red{border-color:rgba(231,76,60,.3);color:#e74c3c}
-.fbtn.gold{border-color:rgba(255,214,0,.3);color:#FFD600}
-.lobby{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px}
-.lobby h2{font-size:22px;font-weight:700;color:#FFD600}
-.lobby p{font-size:13px;color:#6b7280;text-align:center;max-width:280px;line-height:1.6}
-.slots{width:100%;max-width:300px;display:flex;flex-direction:column;gap:8px}
-.slot{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;border:1px solid #1e2030;background:#10121c}
-.slot.empty{border-style:dashed;opacity:.5}
-.lbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.board-wrap{position:relative;display:inline-block}
-table#board{border-collapse:collapse;position:relative;z-index:2}
-td.cell{width:70px;height:70px;text-align:center;vertical-align:middle;cursor:pointer;position:relative}
-@media(max-width:480px){td.cell{width:58px;height:58px}}
-.piece{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s;position:relative}
-@media(max-width:480px){.piece{width:36px;height:36px}}
-.piece:hover{transform:scale(1.08)}
-.piece.p1{background:var(--p1);box-shadow:0 2px 8px rgba(231,76,60,.5)}
-.piece.p2{background:var(--p2);box-shadow:0 2px 8px rgba(52,152,219,.5)}
-.piece svg{width:60%;height:60%;fill:rgba(255,255,255,0.85)}
-.piece.selected{outline:3px solid #FFD600;outline-offset:2px}
-.piece.can-move{outline:3px solid #FFD600;outline-offset:2px;animation:alqpulse 1s infinite}
-.move-dot{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-@media(max-width:480px){.move-dot{width:36px;height:36px}}
-.move-dot.slide{background:rgba(52,152,219,.35);border:2px solid #3498db}
-.move-dot.capture{background:rgba(255,214,0,.4);border:2px solid #FFD600}
-@keyframes alqpulse{0%,100%{opacity:1}50%{opacity:.6}}
-svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
-.chain-bar{position:absolute;bottom:-46px;left:50%;transform:translateX(-50%);background:#10121c;border:1.5px solid #FFD600;border-radius:8px;padding:5px 14px;font-size:12px;color:#FFD600;white-space:nowrap;display:flex;align-items:center;gap:10px;z-index:10}
-.chain-bar button{background:none;border:1px solid #FFD600;color:#FFD600;border-radius:5px;padding:2px 9px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
-.win-overlay{position:absolute;inset:0;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:20;border-radius:4px}
-.win-overlay h3{font-size:22px;font-weight:700}
-.win-overlay p{font-size:13px;color:rgba(255,255,255,.55)}
-#alq-overlay{position:fixed;inset:0;z-index:600;background:#080910;display:none;flex-direction:column;font-family:'DM Sans',sans-serif}
 </style>
 </head>
 <body>
@@ -577,7 +526,6 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
       <span class="topbar-title"><span>deeep</span>Talk</span>
       <span class="topbar-room">/ {{ room }}</span>
       <div class="topbar-right">
-        <button class="wb-toggle-btn" @click="openGame">🎮 Game</button>
         <button class="wb-toggle-btn" :class="{active:showWB}" @click="toggleWB">🎨 Whiteboard</button>
         <span class="topbar-by">by deeepak</span>
       </div>
@@ -873,10 +821,6 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
   </div>
 </div>
 </transition>
-
-
-<!-- ALQUERQUE GAME OVERLAY -->
-<div id="alq-overlay"></div>
 
 </div><!-- #app -->
 
@@ -1411,13 +1355,8 @@ createApp({
     })
     const onPopState = (e) => {
       if(screen.value==='chat'){
-        const gameOverlay = document.getElementById('alq-overlay')
-        if(gameOverlay && gameOverlay.style.display==='flex'){
-          gameOverlay.style.display='none'; return
-        }
-        if(showWB.value){ showWB.value=false; return }
-        // Back pressed on inroom state — re-push so next back also caught, show confirm
-        history.pushState({deeeptalk:'inroom'}, '')
+        // Back button pressed while in room — show confirmation
+        history.pushState({deeeptalk:'inroom'}, '') // re-push so next back also intercepted
         showLeaveConfirm.value=true
       }
     }
@@ -1743,9 +1682,6 @@ createApp({
         const msg = messages.value.find(m=>m.id===d.msg_id)
         if(msg) msg.reactions = d.reactions
       })
-      socket.on('alq_state', (g)=>{ if(typeof alqHandleState!=='undefined') alqHandleState(g) })
-      socket.on('alq_closed', ()=>{ if(typeof alqHandleClosed!=='undefined') alqHandleClosed() })
-      socket.on('alq_error', (d)=>{ alert('Game: '+d.msg) })
       socket.on('typing',(d)=>{ if(!typers.value.find(t=>t.sid===d.sid)) typers.value.push({sid:d.sid,username:d.username}) })
       socket.on('stop_typing',(d)=>{ typers.value=typers.value.filter(t=>t.sid!==d.sid) })
       socket.on('disconnect',()=>{ if(screen.value==='chat') messages.value.push({kind:'event',text:'Disconnected',ts:''}) })
@@ -1790,15 +1726,7 @@ createApp({
       })
     }
 
-    function toggleWB(){
-      if(!showWB.value) history.pushState({deeeptalk:'wb'}, '')
-      showWB.value=!showWB.value
-    }
-    function openGame(){
-      history.pushState({deeeptalk:'game'}, '')
-      document.getElementById('alq-overlay').style.display='flex'
-      alqOpen(room.value, username.value, mySid.value, socket)
-    }
+    function toggleWB(){ showWB.value=!showWB.value }
 
     const showLeaveConfirm = ref(false)
 
@@ -1941,7 +1869,7 @@ createApp({
       showWB,wbImgPanel,roomImages,wbCanvas,wbWrap,cursorCanvas,minimapCanvas,
       wbTool,wbColor,wbSize,wbFill,wbPalette,wbDrawers,wbCoordsLabel,hexInput,onHexInput,
       selImgRef,deleteSelImg,
-      setTool,toggleWB,openGame,wbUndo,wbClearConfirm,fitAll,goHome,jumpToUser,onMinimapClick,
+      setTool,toggleWB,wbUndo,wbClearConfirm,fitAll,goHome,jumpToUser,onMinimapClick,
       onMD,onMM,onMU,onML,onDblClick,onWheel,onTD,onTM,onTU,
       doJoin,doLeave,confirmLeave,showLeaveConfirm,doSend,onEnterKey,onInput,pickEmoji,isBigEmoji,onFileChange,
       reactMsg,startReply,scrollToMsg,insertImageToWB,_doInsertImage
@@ -1973,371 +1901,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {})
   })
 }
-</script>
-
-<script>
-
-
-// ══ ALQUERQUE GAME MODULE ══
-
-'use strict';
-
-// ══════════════════════════════════════
-// PIECE SVG (crown icon from reference)
-// ══════════════════════════════════════
-function pieceSVG(){
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M528 448H112c-9 0-16 7-16 16v32c0 9 7 16 16 16h416c9 0 16-7 16-16v-32c0-9-7-16-16-16zm64-320a48 48 0 0 0-44 68l-72 43c-15 9-35 4-44-11L350 85a48 48 0 1 0-60 0L208 228c-9 15-29 20-44 11l-72-43a48 48 0 1 0-40 47l72 193h384l72-193 8 1a48 48 0 0 0 0-96z"/></svg>`
-}
-
-// ══════════════════════════════════════
-// GAME LOGIC
-// ══════════════════════════════════════
-// Board: 5x5 grid stored as flat array[25]
-// p1 = top (rows 0-1 + row2 cols 0-1), p2 = bottom, null = empty center(idx 12)
-const INIT_BOARD = [
-  'p1','p1','p1','p1','p1',
-  'p1','p1','p1','p1','p1',
-  'p1','p1', null,'p2','p2',
-  'p2','p2','p2','p2','p2',
-  'p2','p2','p2','p2','p2'
-]
-
-// Which cells have diagonal connections (even-indexed cells in 5x5)
-function canDiag(idx){ return idx%2===0 }
-
-function getNeighbors(idx){
-  const r=Math.floor(idx/5), c=idx%5, out=[]
-  const dirs=[[-1,0],[1,0],[0,-1],[0,1]]
-  if(canDiag(idx)) dirs.push([-1,-1],[-1,1],[1,-1],[1,1])
-  for(const [dr,dc] of dirs){
-    const nr=r+dr, nc=c+dc
-    if(nr>=0&&nr<5&&nc>=0&&nc<5) out.push({ni:nr*5+nc,dr,dc})
-  }
-  return out
-}
-
-function getMoves(board,idx,chain=null){
-  const piece=board[idx]
-  if(!piece) return []
-  if(chain!=null&&chain!==idx) return []
-  const opp=piece==='p1'?'p2':'p1'
-  const moves=[]
-  for(const {ni,dr,dc} of getNeighbors(idx)){
-    if(board[ni]===null&&chain===null){
-      moves.push({from:idx,to:ni,cap:null,type:'slide'})
-    } else if(board[ni]===opp){
-      const er=Math.floor(ni/5)+dr, ec=ni%5+dc
-      if(er>=0&&er<5&&ec>=0&&ec<5){
-        const land=er*5+ec
-        if(board[land]===null) moves.push({from:idx,to:land,cap:ni,type:'capture'})
-      }
-    }
-  }
-  return moves
-}
-
-// ══════════════════════════════════════
-// STATE
-// ══════════════════════════════════════
-let alqSt={
-  screen:'join', username:'', room:'', err:'',
-  game:null, mySid:null, myRole:null, sel:null
-}
-let alqSocket=null
-
-function myTurn(){ return alqSt.game?.turn===alqSt.myRole&&alqSt.myRole!=='watcher' }
-function inGame(){ return alqSt.myRole==='p1'||alqSt.myRole==='p2' }
-
-function getHints(){
-  if(!alqSt.game||alqSt.sel===null||!myTurn()) return []
-  return getMoves(alqSt.game.board, alqSt.sel, alqSt.game.chain??null)
-}
-
-function canMovepieces(){
-  // All pieces of current player that can move (highlighted yellow)
-  if(!alqSt.game||!myTurn()) return []
-  const board=alqSt.game.board, player=alqSt.game.turn
-  const chain=alqSt.game.chain
-  if(chain!==null&&chain!==undefined) return [chain]
-  // Show ALL pieces that can move (slide or capture)
-  const movable=[]
-  for(let i=0;i<25;i++){
-    if(board[i]===player&&getMoves(board,i).length) movable.push(i)
-  }
-  return movable
-}
-
-// ══════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════
-
-
-
-
-
-
-// ══════════════════════════════════════
-// BOARD DRAWING (table-based like reference)
-// ══════════════════════════════════════
-function drawBoard(){
-  const wrap=document.getElementById('board-wrap')
-  if(!wrap) return
-  const g=alqSt.game
-  if(!g||!g.board||g.board.length<25) return
-  const board=g.board
-  const movable=canMovepieces()
-  const hints=getHints()
-  const hintSet=new Set(hints.map(h=>h.to))
-  const hintMap={}; hints.forEach(h=>hintMap[h.to]=h.type)
-
-  // P2 sees the board flipped — their pieces at bottom, opponent at top
-  const flip = alqSt.myRole === 'p1'
-
-  // Build table
-  let html=`<table id="board">`
-  for(let r=0;r<5;r++){
-    html+=`<tr>`
-    for(let c=0;c<5;c++){
-      // Visual position → real board index
-      const visualPos = r*5+c
-      const idx = flip ? (24 - visualPos) : visualPos
-      const piece=board[idx]
-      let inner=''
-      if(piece){
-        const isSel=alqSt.sel===idx
-        const canmv=movable.includes(idx) && alqSt.sel===null
-        const cls=`piece ${piece}${isSel?' selected':canmv&&myTurn()?' can-move':''}`
-        inner=`<div class="${cls}" data-idx="${idx}">${pieceSVG()}</div>`
-      } else if(hintSet.has(idx)){
-        inner=`<div class="move-dot ${hintMap[idx]}" data-idx="${idx}"></div>`
-      }
-      html+=`<td class="cell" data-idx="${idx}">${inner}</td>`
-    }
-    html+=`</tr>`
-  }
-  html+=`</table>`
-  wrap.innerHTML=html
-
-  // Draw SVG lines on top
-  drawLines(wrap)
-
-  // Chain bar
-  if(g.chain!=null&&myTurn()){
-    const bar=document.createElement('div')
-    bar.className='chain-bar'
-    bar.innerHTML=`⚡ Chain capture available! <button id="bchain">End Turn</button>`
-    wrap.appendChild(bar)
-    document.getElementById('bchain')?.addEventListener('click',()=>alqSocket?.emit('alq_stop_chain',{room:alqSt.room}))
-  }
-
-  // Win overlay
-  if(g.status==='finished'){
-    const p1n=g.players?.[0]?.name||'P1', p2n=g.players?.[1]?.name||'P2'
-    const wname=g.winner==='p1'?p1n:p2n
-    const wcol=g.winner==='p1'?'var(--p1)':'var(--p2)'
-    const ov=document.createElement('div')
-    ov.className='win-overlay'
-    ov.innerHTML=`<h3 style="color:${wcol}">🏆 ${wname} wins!</h3><p>Game Over</p>`
-    wrap.appendChild(ov)
-  }
-
-  // Click handlers
-  wrap.querySelectorAll('[data-idx]').forEach(el=>{
-    el.addEventListener('click',e=>{
-      e.stopPropagation()
-      handleClick(parseInt(el.dataset.idx))
-    })
-  })
-}
-
-function drawLines(wrap){
-  const table=wrap.querySelector('#board')
-  if(!table) return
-  const cells=table.querySelectorAll('td.cell')
-  if(!cells.length) return
-  const W=table.offsetWidth, H=table.offsetHeight
-
-  function center(idx){
-    const td=cells[idx]
-    return{x:td.offsetLeft+td.offsetWidth/2, y:td.offsetTop+td.offsetHeight/2}
-  }
-
-  // Lines from reference: outer rect + internal + diagonals
-  const lineIdxs=[
-    [1,0,1,4],[2,0,2,4],[3,0,3,4],
-    [0,1,4,1],[0,2,4,2],[0,3,4,3],
-    [0,2,2,0],[0,2,2,4],[2,0,4,2],[2,4,4,2],
-    [0,0,4,4],[0,4,4,0]
-  ]
-
-  let svgLines=`<svg class="lines" width="${W}" height="${H}">`
-  // Outer rectangle
-  const tl=center(0), br=center(24)
-  svgLines+=`<rect x="${tl.x}" y="${tl.y}" width="${br.x-tl.x}" height="${br.y-tl.y}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>`
-  // Internal lines
-  for(const [r1,c1,r2,c2] of lineIdxs){
-    const a=center(r1*5+c1), b=center(r2*5+c2)
-    svgLines+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>`
-  }
-  svgLines+=`</svg>`
-
-  const svg=document.createElement('div')
-  svg.innerHTML=svgLines
-  wrap.insertBefore(svg.firstChild, wrap.firstChild)
-}
-
-function handleClick(idx){
-  const g=alqSt.game
-  if(!g||g.status!=='playing'||!myTurn()) return
-  const board=g.board, role=alqSt.myRole, chain=g.chain??null, sel=alqSt.sel
-
-  if(sel===null){
-    // Select any own piece that has valid moves
-    if(board[idx]===role&&getMoves(board,idx,chain).length){
-      alqSt.sel=idx; drawBoard()
-    }
-  } else if(idx===sel){
-    // Deselect
-    if(chain===null){alqSt.sel=null; drawBoard()}
-  } else {
-    const mv=getMoves(board,sel,chain).find(m=>m.to===idx)
-    if(mv){
-      alqSocket?.emit('alq_move',{room:alqSt.room,from:sel,to:idx})
-      alqSt.sel=null
-    } else if(board[idx]===role&&chain===null){
-      alqSt.sel=idx; drawBoard()
-    } else {
-      alqSt.sel=null; drawBoard()
-    }
-  }
-}
-
-// ══════════════════════════════════════
-// NETWORK
-// ══════════════════════════════════════
-
-
-// ─── BRIDGE: called from Vue ───────────────────────
-function alqOpen(roomName, userName, mySid, socketRef) {
-  alqSt.room = roomName
-  alqSt.username = userName
-  alqSt.mySid = mySid
-  alqSocket = socketRef
-  alqSocket.emit('alq_new_or_join', {username: userName, room: roomName})
-}
-
-function alqHandleState(g) {
-  alqSt.game = g
-  const p = g.players?.find(x => x.sid === alqSt.mySid)
-  alqSt.myRole = p ? p.role : 'watcher'
-  if (g.status === 'playing') {
-    if (g.chain != null) alqSt.sel = g.chain
-    else if (alqSt.sel != null && g.board[alqSt.sel] !== alqSt.myRole) alqSt.sel = null
-  }
-  alqRenderOverlay()
-}
-
-function alqHandleClosed() {
-  alqSt.game = null; alqSt.sel = null; alqSt.myRole = null
-  document.getElementById('alq-overlay').style.display = 'none'
-}
-
-function alqRenderOverlay() {
-  const overlay = document.getElementById('alq-overlay')
-  if (!overlay) return
-  const g = alqSt.game
-  if (!g) return
-
-  const p1 = g.players?.[0], p2 = g.players?.[1]
-  const p1n = p1?.name||'Player 1', p2n = p2?.name||'Player 2'
-
-  const turnHTML = g.status==='lobby'
-    ? `<span style="font-size:11px;color:#6b7280">Lobby</span>`
-    : g.status==='playing'
-      ? `<span class="turn-pill" style="${g.turn==='p1'?'background:rgba(231,76,60,.18);color:#e74c3c':'background:rgba(52,152,219,.18);color:#3498db'}">${(g.turn==='p1'?p1n:p2n)}'s turn</span>`
-      : `<span style="font-size:12px;font-weight:700;color:#FFD600">🏆 ${g.winner==='p1'?p1n:p2n} wins!</span>`
-
-  overlay.innerHTML = `
-  <div class="game-screen">
-    <div class="header">
-      <div class="pi">
-        <div class="avatar" style="background:var(--p1)">${p1n[0].toUpperCase()}</div>
-        <div>
-          <div class="pname" style="color:var(--p1)">${p1n}${alqSt.myRole==='p1'?' <small style="color:#6b7280">(you)</small>':''}</div>
-          <div class="pcap">⚔ ${g.captured?.p1||0}</div>
-        </div>
-      </div>
-      <div class="tmid">${turnHTML}</div>
-      <div class="pi r">
-        <div class="avatar" style="background:var(--p2)">${(p2n[0]||'?').toUpperCase()}</div>
-        <div>
-          <div class="pname" style="color:var(--p2)">${p2n}${alqSt.myRole==='p2'?' <small style="color:#6b7280">(you)</small>':''}</div>
-          <div class="pcap">⚔ ${g.captured?.p2||0}</div>
-        </div>
-      </div>
-    </div>
-
-    ${g.status==='lobby' ? alqLobbyHTML(g,p1n,p2n) : '<div class="body"><div id="board-wrap" class="board-wrap"></div></div>'}
-
-    <div class="footer">
-      <div class="finfo">${alqSt.myRole==='watcher'?'👁 Watching':alqSt.myRole==='p1'?'🔴 Player 1':'🔵 Player 2'}</div>
-      <div class="fbtns">
-        ${inGame()&&g.status==='playing'?'<button class="fbtn red" id="alq-resign">🏳 Resign</button>':''}
-        ${g.status==='finished'?'<button class="fbtn gold" id="alq-newgame">New Game</button>':''}
-        <button class="fbtn" id="alq-hide">✕ Close</button>
-      </div>
-    </div>
-  </div>`
-
-  // Bind footer buttons
-  document.getElementById('alq-hide')?.addEventListener('click', ()=>{
-    document.getElementById('alq-overlay').style.display='none'
-  })
-  document.getElementById('alq-resign')?.addEventListener('click', ()=>{
-    if(confirm('Resign?')) alqSocket?.emit('alq_resign',{room:alqSt.room})
-  })
-  document.getElementById('alq-newgame')?.addEventListener('click', ()=>{
-    alqSocket?.emit('alq_close',{room:alqSt.room})
-  })
-  document.getElementById('alq-join2')?.addEventListener('click', ()=>{
-    alqSocket?.emit('alq_join',{room:alqSt.room})
-  })
-  document.getElementById('alq-start')?.addEventListener('click', ()=>{
-    alqSocket?.emit('alq_start',{room:alqSt.room})
-  })
-  document.getElementById('alq-cancel')?.addEventListener('click', ()=>{
-    alqSocket?.emit('alq_close',{room:alqSt.room})
-  })
-
-  if (g.status==='playing'||g.status==='finished') {
-    requestAnimationFrame(()=>drawBoard())
-  }
-}
-
-function alqLobbyHTML(g, p1n, p2n) {
-  return `<div class="lobby">
-    <h2>♟ Alquerque</h2>
-    <p>Two players join, then host starts. Others watch live.</p>
-    <div class="slots">
-      ${[0,1].map(i=>`
-      <div class="slot ${!g.players?.[i]?'empty':''}">
-        <div class="avatar" style="${i===0?'background:var(--p1)':'background:var(--p2)'}">${(g.players?.[i]?.name?.[0]||'?').toUpperCase()}</div>
-        <div>
-          <div style="font-size:13px;font-weight:500">${g.players?.[i]?.name||'Waiting...'}</div>
-          <div style="font-size:11px;color:#6b7280">${i===0?'🔴 P1':'🔵 P2'}</div>
-        </div>
-      </div>`).join('')}
-    </div>
-    <div class="lbtns">
-      ${!inGame()&&!g.players?.[1]?'<button class="fbtn gold" id="alq-join2">Join as P2</button>':''}
-      ${g.host===alqSt.mySid&&g.players?.[1]?'<button class="fbtn gold" id="alq-start">▶ Start</button>':''}
-      <button class="fbtn red" id="alq-cancel">Cancel</button>
-    </div>
-  </div>`
-}
-
-
-
 </script>
 </body>
 </html>
