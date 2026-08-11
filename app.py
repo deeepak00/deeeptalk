@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, request, send_from_directory
 from flask_socketio import SocketIO, join_room, leave_room, emit
 from flask_cors import CORS
