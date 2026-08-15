@@ -57,8 +57,8 @@ def push_history(room, msg):
     if room not in history:
         history[room] = []
     history[room].append(msg)
-    if len(history[room]) > 200:
-        history[room] = history[room][-200:]
+    if len(history[room]) > 50:
+        history[room] = history[room][-50:]
 
 # ── Chat ────────────────────────────────────────────────────
 
@@ -379,9 +379,9 @@ def on_wb_stroke(data):
     if room not in boards:
         boards[room] = []
     boards[room].append(stroke)
-    # Cap at 500 strokes
-    if len(boards[room]) > 500:
-        boards[room] = boards[room][-500:]
+    # Cap at 300 strokes
+    if len(boards[room]) > 300:
+        boards[room] = boards[room][-300:]
     emit("wb_stroke", {"stroke": stroke}, to=room, include_self=False)
 
 @socketio.on("wb_clear")
@@ -414,6 +414,14 @@ def on_dc():
             _remove(sid, rn, users[sid]["username"])
             break
 
+def delayed_cleanup(room):
+    eventlet.sleep(180)
+    if room in rooms and not rooms[room]:
+        rooms.pop(room, None)
+        history.pop(room, None)
+        boards.pop(room, None)
+        games.pop(room, None)
+
 def _remove(sid, room, username):
     if room not in rooms or sid not in rooms[room]:
         return
@@ -423,9 +431,7 @@ def _remove(sid, room, username):
         push_history(room, evt)
         emit("user_left", {"sid": sid, "username": username, "users": room_users(room), "ts": ts()}, to=room)
     else:
-        del rooms[room]
-        if room in history: del history[room]
-        if room in boards:  del boards[room]
+        eventlet.spawn(delayed_cleanup, room)
 
 if __name__ == "__main__":
     print("deeepTalk by deeepak — http://localhost:5000")

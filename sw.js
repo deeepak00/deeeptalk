@@ -28,6 +28,9 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
+  // Only handle GET requests
+  if (e.request.method !== 'GET') return
+
   const url = new URL(e.request.url)
 
   // Never intercept socket.io websocket/polling requests
