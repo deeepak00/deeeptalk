@@ -1791,7 +1791,11 @@ createApp({
       const uname=form.value.username.trim(),rname=form.value.room.trim()
       username.value=uname; room.value=rname; errMsg.value=''; screen.value='connecting'
       const url=window.location.hostname==='localhost'?'http://localhost:5000':window.location.origin
-      const savedToken = localStorage.getItem(`deeeptalk_token_${rname}`) || ''
+      let savedToken = localStorage.getItem(`deeeptalk_token_${rname}`)
+      if(!savedToken){
+        savedToken = uname.replace(/\s+/g, '_') + '_' + Math.random().toString(36).substring(2, 10)
+        localStorage.setItem(`deeeptalk_token_${rname}`, savedToken)
+      }
       socket=io(url,{
         transports:['websocket'],
         upgrade:false,
@@ -1817,6 +1821,7 @@ createApp({
       socket.on('join_error',(d)=>{
         errMsg.value=d.msg
         screen.value='join'
+        localStorage.removeItem(`deeeptalk_token_${rname}`)
         if(socket){socket.disconnect();socket=null}
       })
       socket.on('joined',(d)=>{
