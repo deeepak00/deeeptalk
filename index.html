@@ -1826,6 +1826,7 @@ createApp({
       })
       socket.on('joined',(d)=>{
         users.value=d.users
+        typers.value=[]
         mySid.value=d.sid            // unique identity — even if names collide
         myToken.value=d.token        // save secret token
         localStorage.setItem(`deeeptalk_token_${d.room}`, d.token) // persist it

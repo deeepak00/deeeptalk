@@ -665,6 +665,7 @@ def on_dc():
         if sid in users:
             users[sid]["online"] = False
             username = users[sid]["username"]
+            emit("stop_typing", {"sid": sid, "username": username}, to=rn)
             eventlet.spawn(deferred_remove, sid, rn, username)
             break
 
