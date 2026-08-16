@@ -651,8 +651,8 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
             <span class="mtime">
               {{ m.ts }}
               <span v-if="m.username === username" class="msg-status">
-                <span v-if="hasOthersRead(m)" class="checks read" title="Read by others">✓✓</span>
-                <span v-else class="checks" title="Sent">✓✓</span>
+                <span v-if="hasOthersRead(m)" class="checks read" :title="'Seen by: ' + getReadersList(m)">✓✓</span>
+                <span v-else class="checks" title="Sent (Delivered to room)">✓✓</span>
               </span>
             </span>
           </div>
@@ -691,8 +691,8 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
             <span class="mtime">
               {{ m.ts }}
               <span v-if="m.username === username" class="msg-status">
-                <span v-if="hasOthersRead(m)" class="checks read" title="Read by others">✓✓</span>
-                <span v-else class="checks" title="Sent">✓✓</span>
+                <span v-if="hasOthersRead(m)" class="checks read" :title="'Seen by: ' + getReadersList(m)">✓✓</span>
+                <span v-else class="checks" title="Sent (Delivered to room)">✓✓</span>
               </span>
             </span>
           </div>
@@ -2069,6 +2069,12 @@ createApp({
       return m.readBy.some(u => u !== username.value)
     }
 
+    function getReadersList(m){
+      if(!m.readBy) return 'No one'
+      const others = m.readBy.filter(u => u !== username.value)
+      return others.length ? others.join(', ') : 'No one'
+    }
+
     onUnmounted(()=>{
       if(socket) socket.disconnect();
       window.removeEventListener('resize',onResize);
@@ -2088,7 +2094,7 @@ createApp({
       setTool,toggleWB,openGame,wbUndo,wbClearConfirm,fitAll,goHome,jumpToUser,onMinimapClick,
       onMD,onMM,onMU,onML,onDblClick,onWheel,onTD,onTM,onTU,
       doJoin,doLeave,confirmLeave,showLeaveConfirm,doSend,onEnterKey,onInput,pickEmoji,isBigEmoji,onFileChange,
-      reactMsg,startReply,scrollToMsg,insertImageToWB,_doInsertImage,hasOthersRead
+      reactMsg,startReply,scrollToMsg,insertImageToWB,_doInsertImage,hasOthersRead,getReadersList
     }
   }
 }).mount('#app')
