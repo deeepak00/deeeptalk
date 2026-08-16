@@ -264,16 +264,24 @@ def on_join(data):
     if room not in rooms:
         rooms[room] = {}
     
-    # Check if username is already taken by someone else (different token)
+    # Check if username is already taken by someone else (different token and is online)
     username_taken = False
     for osid, u in rooms[room].items():
-        if u["username"].lower() == uname.lower() and u.get("token") != token:
+        if u["username"].lower() == uname.lower() and u.get("token") != token and u.get("online", True):
             username_taken = True
             break
             
     if username_taken:
         emit("join_error", {"msg": f"Username '{uname}' is already active in this room. Please choose a different name."})
         return
+
+    # Clean up any offline sessions with the same username immediately
+    offline_sids = []
+    for osid, u in rooms[room].items():
+        if u["username"].lower() == uname.lower() and not u.get("online", True):
+            offline_sids.append(osid)
+    for osid in offline_sids:
+        rooms[room].pop(osid, None)
     
     is_reconnecting = False
     old_sids = []
@@ -291,7 +299,7 @@ def on_join(data):
         token = f"{uname.replace(' ', '_')}_{uuid.uuid4().hex[:8]}"
 
     color = pick_color(room)
-    rooms[room][sid] = {"username": uname, "color": color, "token": token}
+    rooms[room][sid] = {"username": uname, "color": color, "token": token, "online": True}
 
     emit("joined", {
         "room": room, "username": uname, "color": color,
@@ -655,6 +663,7 @@ def on_dc():
     sid = request.sid
     for rn, users in list(rooms.items()):
         if sid in users:
+            users[sid]["online"] = False
             username = users[sid]["username"]
             eventlet.spawn(deferred_remove, sid, rn, username)
             break
@@ -676,16 +685,16 @@ def delayed_cleanup(room):
 
 def deferred_remove(sid, room, username):
     eventlet.sleep(15)  # 15s grace period for unexpected drops
-    if room not in rooms:
+    if room not in rooms or sid not in rooms[room]:
         return
-    token = None
-    if sid in rooms[room]:
-        token = rooms[room][sid].get("token")
+        
+    token = rooms[room][sid].get("token")
     token_still_connected = False
     if token:
-        token_still_connected = any(u.get("token") == token for osid, u in rooms[room].items() if osid != sid)
-    if sid in rooms[room]:
-        del rooms[room][sid]
+        token_still_connected = any(u.get("token") == token and u.get("online", True) for osid, u in rooms[room].items() if osid != sid)
+        
+    del rooms[room][sid]
+    
     if not token_still_connected:
         if rooms[room]:
             emit("user_left", {"sid": sid, "username": username, "users": room_users(room), "ts": ts()}, to=room)
