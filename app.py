@@ -70,6 +70,17 @@ def on_join(data):
     join_room(room)
     if room not in rooms:
         rooms[room] = {}
+    
+    is_reconnecting = False
+    old_sids = []
+    for osid, u in rooms[room].items():
+        if u["username"] == uname:
+            is_reconnecting = True
+            old_sids.append(osid)
+            
+    for osid in old_sids:
+        rooms[room].pop(osid, None)
+
     color = pick_color(room)
     rooms[room][sid] = {"username": uname, "color": color}
 
@@ -83,9 +94,8 @@ def on_join(data):
     if room in games:
         emit("alq_state", games[room])
 
-    evt = {"kind": "event", "text": f"{uname} joined the room", "ts": ts()}
-    push_history(room, evt)
-    emit("user_joined", {"username": uname, "color": color, "users": room_users(room), "ts": ts()}, to=room, include_self=False)
+    if not is_reconnecting:
+        emit("user_joined", {"username": uname, "color": color, "users": room_users(room), "ts": ts()}, to=room, include_self=False)
 
 @socketio.on("leave")
 def on_leave(data):
@@ -411,7 +421,8 @@ def on_dc():
     sid = request.sid
     for rn, users in list(rooms.items()):
         if sid in users:
-            _remove(sid, rn, users[sid]["username"])
+            username = users[sid]["username"]
+            eventlet.spawn(deferred_remove, sid, rn, username)
             break
 
 def delayed_cleanup(room):
@@ -422,13 +433,24 @@ def delayed_cleanup(room):
         boards.pop(room, None)
         games.pop(room, None)
 
+def deferred_remove(sid, room, username):
+    eventlet.sleep(15)  # 15s grace period for unexpected drops
+    if room not in rooms:
+        return
+    username_still_connected = any(u["username"] == username for osid, u in rooms[room].items() if osid != sid)
+    if sid in rooms[room]:
+        del rooms[room][sid]
+    if not username_still_connected:
+        if rooms[room]:
+            emit("user_left", {"sid": sid, "username": username, "users": room_users(room), "ts": ts()}, to=room)
+        else:
+            eventlet.spawn(delayed_cleanup, room)
+
 def _remove(sid, room, username):
     if room not in rooms or sid not in rooms[room]:
         return
     del rooms[room][sid]
     if rooms[room]:
-        evt = {"kind": "event", "text": f"{username} left the room", "ts": ts()}
-        push_history(room, evt)
         emit("user_left", {"sid": sid, "username": username, "users": room_users(room), "ts": ts()}, to=room)
     else:
         eventlet.spawn(delayed_cleanup, room)
