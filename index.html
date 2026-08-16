@@ -572,6 +572,29 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
   opacity: 1 !important;
   text-shadow: 0 0 4px rgba(0,229,255,0.4);
 }
+.act-info {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .12s;
+  flex-shrink: 0;
+  margin-left: 6px;
+  line-height: 1;
+}
+.act-info:hover {
+  background: var(--border);
+  color: var(--accent);
+  border-color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -662,6 +685,7 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
               <button class="act-more" @click.stop="openReactPicker(m,$event)" title="More reactions">…</button>
               <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;margin:0 2px"></div>
               <button class="act-reply" @click.stop="startReply(m)">↩ Reply</button>
+              <button v-if="m.username === username" class="act-info" @click.stop="activeInfoMsg=m" title="Message Info">!</button>
             </div>
             <div v-if="m.replyTo" class="reply-quote" @click="scrollToMsg(m.replyTo.id)">
               <div class="reply-quote-user">↩ {{ m.replyTo.username }}</div>
@@ -702,6 +726,7 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
               <button class="act-more" @click.stop="openReactPicker(m,$event)" title="More reactions">…</button>
               <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;margin:0 2px"></div>
               <button class="act-reply" @click.stop="startReply(m)">↩ Reply</button>
+              <button v-if="m.username === username" class="act-info" @click.stop="activeInfoMsg=m" title="Message Info">!</button>
             </div>
             <div v-if="m.replyTo" class="reply-quote" @click="scrollToMsg(m.replyTo.id)">
               <div class="reply-quote-user">↩ {{ m.replyTo.username }}</div>
@@ -940,6 +965,39 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
 </div>
 </transition>
 
+<!-- Message Info modal -->
+<transition name="lb">
+<div v-if="activeInfoMsg" class="confirm-overlay" @click.self="activeInfoMsg=null">
+  <div class="confirm-box" style="max-width:360px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-weight:600;font-size:15px;color:var(--text)">Message Info</span>
+      <button @click="activeInfoMsg=null" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:0">×</button>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13.5px;max-height:150px;overflow-y:auto">
+      <div style="font-size:11px;font-weight:600;margin-bottom:4px" :style="{color:activeInfoMsg.color}">{{ activeInfoMsg.username }}</div>
+      <div v-if="activeInfoMsg.kind==='msg'" style="white-space:pre-wrap;word-break:break-word;color:var(--text)">{{ activeInfoMsg.message }}</div>
+      <div v-else-if="activeInfoMsg.kind==='image'" style="text-align:center"><img :src="activeInfoMsg.image" style="max-width:100%;max-height:100px;border-radius:6px"/></div>
+      <div style="font-size:10px;color:var(--muted);text-align:right;margin-top:6px">{{ activeInfoMsg.ts }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-weight:600;font-size:13.5px;color:var(--text);margin-top:4px">Seen by</span>
+      <div v-if="activeInfoMsg.readBy && activeInfoMsg.readBy.filter(name => name !== username).length" style="display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto">
+        <div v-for="u in activeInfoMsg.readBy.filter(name => name !== username)" :key="u" style="display:flex;align-items:center;gap:8px;padding:6px;background:var(--panel);border-radius:8px;border:1px solid var(--border)">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--own-msg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text)">
+            {{ u[0].toUpperCase() }}
+          </div>
+          <span style="font-size:13px;color:var(--text);flex:1">{{ u }}</span>
+          <span style="font-size:11px;color:#00e5ff;font-weight:600">✓✓ Seen</span>
+        </div>
+      </div>
+      <div v-else style="font-size:12px;color:var(--muted);text-align:center;padding:12px">
+        No one else has read this message yet.
+      </div>
+    </div>
+  </div>
+</div>
+</transition>
+
 
 <!-- ALQUERQUE GAME OVERLAY -->
 <div id="alq-overlay"></div>
@@ -1075,6 +1133,7 @@ createApp({
     const errMsg      = ref('')
     const form        = ref({username:'',room:''})
     const isReconnecting = ref(false)
+    const activeInfoMsg = ref(null)
     const username    = ref('')
     const room        = ref('')
     const mySid       = ref('')   // unique socket id for this session
@@ -2084,7 +2143,7 @@ createApp({
     })
 
     return {
-      screen,errMsg,form,isReconnecting,username,room,mySid,myToken,users,messages,typers,
+      screen,errMsg,form,isReconnecting,activeInfoMsg,username,room,mySid,myToken,users,messages,typers,
       draft,showEmoji,emojiQ,eCat,eCats,filteredEmoji,canJoin,canSend,
       anchor,msgBox,chatInput,fileInput,cameraInput,sidebarOpen,pendingImage,lightboxSrc,hasHistory,
       replyingTo,quickEmoji,allReactEmoji,reactPickerMsg,reactPickerPos,openReactPicker,

@@ -382,23 +382,37 @@ def on_react(data):
     msg_id   = data["msg_id"]
     emoji    = data["emoji"]
     username = rooms.get(room, {}).get(request.sid, {}).get("username", "Unknown")
-    for msg in history.get(room, []):
-        if msg.get("id") == msg_id:
-            if "reactions" not in msg:
-                msg["reactions"] = {}
-            # Check if user already reacted with THIS emoji → toggle off
-            already_on_this = username in msg["reactions"].get(emoji, [])
-            # Remove user from ALL emojis first (one reaction per user)
-            for e in list(msg["reactions"].keys()):
-                if username in msg["reactions"][e]:
-                    msg["reactions"][e].remove(username)
-                if not msg["reactions"][e]:
-                    del msg["reactions"][e]
-            # If they weren't on this emoji before, add them now
-            if not already_on_this:
-                msg["reactions"].setdefault(emoji, []).append(username)
-            break
-    emit("reaction_update", {"msg_id": msg_id, "reactions": msg.get("reactions", {})}, to=room)
+    
+    # Fetch current reactions from SQLite
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT reactions FROM messages WHERE room = ? AND id = ?", (room, msg_id))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        return
+        
+    reactions = json.loads(row["reactions"]) if row["reactions"] else {}
+    
+    # Check if user already reacted with THIS emoji → toggle off
+    already_on_this = username in reactions.get(emoji, [])
+    
+    # Remove user from ALL emojis first (one reaction per user)
+    for e in list(reactions.keys()):
+        if username in reactions[e]:
+            reactions[e].remove(username)
+        if not reactions[e]:
+            del reactions[e]
+            
+    # If they weren't on this emoji before, add them now
+    if not already_on_this:
+        reactions.setdefault(emoji, []).append(username)
+        
+    # Update in SQLite
+    update_message_reactions(room, msg_id, reactions)
+    
+    emit("reaction_update", {"msg_id": msg_id, "reactions": reactions}, to=room)
 
 @socketio.on("typing")
 def on_typing(data):
