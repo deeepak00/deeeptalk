@@ -14,8 +14,182 @@ CORS(app, origins="*")
 socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=10 * 1024 * 1024)
 
 rooms   = {}   # rooms[room]  = { sid: {username, color} }
-history = {}   # history[room] = [ msg, ... ]
-boards  = {}   # boards[room]  = [ stroke, ... ]  (persistent until room destroyed)
+
+import sqlite3
+import json
+import requests
+
+try:
+    import cloudinary
+    import cloudinary.uploader
+    CLOUDINARY_AVAILABLE = True
+except ImportError:
+    CLOUDINARY_AVAILABLE = False
+
+DB_PATH = os.path.join(BASE_DIR, "chat.db")
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id TEXT PRIMARY KEY,
+            room TEXT,
+            kind TEXT,
+            sid TEXT,
+            username TEXT,
+            sender_token TEXT,
+            message TEXT,
+            image TEXT,
+            color TEXT,
+            ts TEXT,
+            reply_to TEXT,
+            reactions TEXT,
+            read_by TEXT
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS strokes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            room TEXT,
+            stroke_json TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_room_history(room):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM messages WHERE room = ? ORDER BY ts ASC LIMIT 50", (room,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    msgs = []
+    for r in rows:
+        reply_to = json.loads(r["reply_to"]) if r["reply_to"] else None
+        reactions = json.loads(r["reactions"]) if r["reactions"] else {}
+        read_by = json.loads(r["read_by"]) if r["read_by"] else []
+        msgs.append({
+            "id": r["id"],
+            "kind": r["kind"],
+            "sid": r["sid"],
+            "username": r["username"],
+            "sender_token": r["sender_token"],
+            "message": r["message"],
+            "image": r["image"],
+            "color": r["color"],
+            "ts": r["ts"],
+            "replyTo": reply_to,
+            "reactions": reactions,
+            "readBy": read_by
+        })
+    return msgs
+
+def save_message(room, msg):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    reply_to_json = json.dumps(msg.get("replyTo")) if msg.get("replyTo") else None
+    reactions_json = json.dumps(msg.get("reactions", {}))
+    read_by_json = json.dumps(msg.get("readBy", []))
+    cursor.execute("""
+        INSERT INTO messages (id, room, kind, sid, username, sender_token, message, image, color, ts, reply_to, reactions, read_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (msg["id"], room, msg["kind"], msg["sid"], msg["username"], msg.get("sender_token", ""),
+          msg.get("message", ""), msg.get("image", ""), msg["color"], msg["ts"], reply_to_json, reactions_json, read_by_json))
+    
+    # Prune to 50 messages
+    cursor.execute("""
+        DELETE FROM messages WHERE room = ? AND id NOT IN (
+            SELECT id FROM messages WHERE room = ? ORDER BY ts DESC LIMIT 50
+        )
+    """, (room, room))
+    conn.commit()
+    conn.close()
+
+def update_message_reactions(room, msg_id, reactions):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE messages SET reactions = ? WHERE room = ? AND id = ?", (json.dumps(reactions), room, msg_id))
+    conn.commit()
+    conn.close()
+
+def get_room_board(room):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT stroke_json FROM strokes WHERE room = ? ORDER BY id ASC LIMIT 300", (room,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [json.loads(r["stroke_json"]) for r in rows]
+
+def save_stroke(room, stroke):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO strokes (room, stroke_json) VALUES (?, ?)", (room, json.dumps(stroke)))
+    cursor.execute("""
+        DELETE FROM strokes WHERE room = ? AND id NOT IN (
+            SELECT id FROM strokes WHERE room = ? ORDER BY id DESC LIMIT 300
+        )
+    """, (room, room))
+    conn.commit()
+    conn.close()
+
+def clear_board(room):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM strokes WHERE room = ?", (room,))
+    conn.commit()
+    conn.close()
+
+def undo_stroke(room, username):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, stroke_json FROM strokes WHERE room = ? ORDER BY id DESC", (room,))
+    rows = cursor.fetchall()
+    target_id = None
+    for r in rows:
+        stroke = json.loads(r["stroke_json"])
+        if stroke.get("by") == username:
+            target_id = r["id"]
+            break
+    if target_id is not None:
+        cursor.execute("DELETE FROM strokes WHERE id = ?", (target_id,))
+    conn.commit()
+    conn.close()
+
+def upload_image(base64_str):
+    if CLOUDINARY_AVAILABLE and os.environ.get("CLOUDINARY_URL"):
+        try:
+            res = cloudinary.uploader.upload(base64_str)
+            return res.get("secure_url")
+        except Exception as e:
+            print("Cloudinary upload failed, falling back:", e)
+            
+    # Fallback to Catbox
+    try:
+        import base64
+        if "," in base64_str:
+            base64_data = base64_str.split(",")[1]
+        else:
+            base64_data = base64_str
+        img_data = base64.b64decode(base64_data)
+        
+        files = {'fileToUpload': ('image.jpg', img_data, 'image/jpeg')}
+        data = {'reqtype': 'fileupload'}
+        res = requests.post("https://catbox.moe/user/api.php", data=data, files=files, timeout=20)
+        if res.status_code == 200 and res.text.startswith("http"):
+            return res.text.strip()
+    except Exception as e:
+        print("Catbox upload failed:", e)
+        
+    return None
 
 COLORS = [
     "#FF4B4B",  # vivid red
@@ -53,12 +227,30 @@ def pick_color(room):
 def ts():
     return datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%H:%M")
 
-def push_history(room, msg):
-    if room not in history:
-        history[room] = []
-    history[room].append(msg)
-    if len(history[room]) > 50:
-        history[room] = history[room][-50:]
+@socketio.on("read_all")
+def on_read_all(data):
+    room = data.get("room")
+    uname = data.get("username")
+    if not room or not uname:
+        return
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, read_by FROM messages WHERE room = ?", (room,))
+    rows = cursor.fetchall()
+    
+    updates = {}
+    for r in rows:
+        msg_id = r["id"]
+        read_by = json.loads(r["read_by"]) if r["read_by"] else []
+        if uname not in read_by:
+            read_by.append(uname)
+            cursor.execute("UPDATE messages SET read_by = ? WHERE room = ? AND id = ?", (json.dumps(read_by), room, msg_id))
+            updates[msg_id] = read_by
+            
+    if updates:
+        conn.commit()
+        emit("msg_read_update", {"updates": updates}, to=room)
+    conn.close()
 
 # ── Chat ────────────────────────────────────────────────────
 
@@ -66,33 +258,56 @@ def push_history(room, msg):
 def on_join(data):
     uname  = data["username"].strip()
     room   = data["room"].strip()
+    token  = data.get("token", "").strip()
     sid    = request.sid
     join_room(room)
     if room not in rooms:
         rooms[room] = {}
     
+    # Check if username is already taken by someone else (different token)
+    username_taken = False
+    for osid, u in rooms[room].items():
+        if u["username"].lower() == uname.lower() and u.get("token") != token:
+            username_taken = True
+            break
+            
+    if username_taken:
+        emit("join_error", {"msg": f"Username '{uname}' is already active in this room. Please choose a different name."})
+        return
+    
     is_reconnecting = False
     old_sids = []
-    for osid, u in rooms[room].items():
-        if u["username"] == uname:
-            is_reconnecting = True
-            old_sids.append(osid)
+    if token:
+        for osid, u in rooms[room].items():
+            if u.get("token") == token:
+                is_reconnecting = True
+                old_sids.append(osid)
             
     for osid in old_sids:
         rooms[room].pop(osid, None)
 
+    if not token:
+        import uuid
+        token = f"{uname.replace(' ', '_')}_{uuid.uuid4().hex[:8]}"
+
     color = pick_color(room)
-    rooms[room][sid] = {"username": uname, "color": color}
+    rooms[room][sid] = {"username": uname, "color": color, "token": token}
 
     emit("joined", {
         "room": room, "username": uname, "color": color,
-        "sid": sid,
+        "sid": sid, "token": token,
         "users": room_users(room), "ts": ts(),
-        "history": history.get(room, []),
-        "board":   boards.get(room, [])
+        "history": get_room_history(room),
+        "board":   get_room_board(room)
     })
     if room in games:
-        emit("alq_state", games[room])
+        g = games[room]
+        for p in g.get('players', []):
+            if p['name'] == uname:
+                if g.get('host') == p['sid']:
+                    g['host'] = sid
+                p['sid'] = sid
+        emit("alq_state", g)
 
     if not is_reconnecting:
         emit("user_joined", {"username": uname, "color": color, "users": room_users(room), "ts": ts()}, to=room, include_self=False)
@@ -107,18 +322,22 @@ def on_msg(data):
     room  = data["room"]
     sid    = request.sid
     color  = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
+    token  = rooms.get(room, {}).get(sid, {}).get("token", "")
+    uname  = data["username"]
     msg = {
         "kind": "msg",
-        "id": f"{request.sid}_{ts()}_{len(history.get(room,[]))}",
+        "id": f"{request.sid}_{ts()}_{uname}_{os.urandom(4).hex()}",
         "sid": request.sid,
-        "username": data["username"],
+        "username": uname,
+        "sender_token": token,
         "message": data.get("message", ""),
         "color": color,
         "ts": ts(),
         "replyTo": data.get("replyTo", None),
-        "reactions": {}
+        "reactions": {},
+        "readBy": [uname]
     }
-    push_history(room, msg)
+    save_message(room, msg)
     emit("new_msg", msg, to=room)
 
 @socketio.on("send_image")
@@ -126,18 +345,26 @@ def on_image(data):
     room  = data["room"]
     sid    = request.sid
     color  = rooms.get(room, {}).get(sid, {}).get("color", "#aaa")
+    token  = rooms.get(room, {}).get(sid, {}).get("token", "")
+    uname  = data["username"]
+    
+    # Upload image externally
+    uploaded_url = upload_image(data["image"])
+    
     msg = {
         "kind": "image",
-        "id": f"{request.sid}_{ts()}_{len(history.get(room,[]))}",
+        "id": f"{request.sid}_{ts()}_{uname}_{os.urandom(4).hex()}",
         "sid": request.sid,
-        "username": data["username"],
-        "image": data["image"],
+        "username": uname,
+        "sender_token": token,
+        "image": uploaded_url if uploaded_url else data["image"],
         "color": color,
         "ts": ts(),
         "replyTo": data.get("replyTo", None),
-        "reactions": {}
+        "reactions": {},
+        "readBy": [uname]
     }
-    push_history(room, msg)
+    save_message(room, msg)
     emit("new_msg", msg, to=room)
 
 @socketio.on("react_msg")
@@ -146,22 +373,22 @@ def on_react(data):
     room     = data["room"]
     msg_id   = data["msg_id"]
     emoji    = data["emoji"]
-    user_sid = request.sid
+    username = rooms.get(room, {}).get(request.sid, {}).get("username", "Unknown")
     for msg in history.get(room, []):
         if msg.get("id") == msg_id:
             if "reactions" not in msg:
                 msg["reactions"] = {}
             # Check if user already reacted with THIS emoji → toggle off
-            already_on_this = user_sid in msg["reactions"].get(emoji, [])
+            already_on_this = username in msg["reactions"].get(emoji, [])
             # Remove user from ALL emojis first (one reaction per user)
             for e in list(msg["reactions"].keys()):
-                if user_sid in msg["reactions"][e]:
-                    msg["reactions"][e].remove(user_sid)
+                if username in msg["reactions"][e]:
+                    msg["reactions"][e].remove(username)
                 if not msg["reactions"][e]:
                     del msg["reactions"][e]
             # If they weren't on this emoji before, add them now
             if not already_on_this:
-                msg["reactions"].setdefault(emoji, []).append(user_sid)
+                msg["reactions"].setdefault(emoji, []).append(username)
             break
     emit("reaction_update", {"msg_id": msg_id, "reactions": msg.get("reactions", {})}, to=room)
 
@@ -357,11 +584,19 @@ def on_wb_img_move(data):
     stroke = data.get("stroke")
     if not room or not stroke:
         return
-    for s in boards.get(room, []):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, stroke_json FROM strokes WHERE room = ?", (room,))
+    rows = cursor.fetchall()
+    for r in rows:
+        s = json.loads(r["stroke_json"])
         if s.get("tool")=="wbimage" and s.get("src")==stroke.get("src") and s.get("by")==stroke.get("by"):
             s["x"]=stroke["x"]; s["y"]=stroke["y"]
             s["w"]=stroke["w"]; s["h"]=stroke["h"]
+            cursor.execute("UPDATE strokes SET stroke_json = ? WHERE id = ?", (json.dumps(s), r["id"]))
             break
+    conn.commit()
+    conn.close()
     emit("wb_img_move", data, to=room, include_self=False)
 
 @socketio.on("wb_img_delete")
@@ -369,10 +604,19 @@ def on_wb_img_delete(data):
     """Remove a specific image from the board."""
     room = data.get("room")
     if not room: return
-    boards[room] = [s for s in boards.get(room, [])
-                    if not (s.get("tool")=="wbimage" and
-                            s.get("src")==data.get("src") and
-                            s.get("by")==data.get("by"))]
+    src = data.get("src")
+    by = data.get("by")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, stroke_json FROM strokes WHERE room = ?", (room,))
+    rows = cursor.fetchall()
+    for r in rows:
+        s = json.loads(r["stroke_json"])
+        if s.get("tool")=="wbimage" and s.get("src")==src and s.get("by")==by:
+            cursor.execute("DELETE FROM strokes WHERE id = ?", (r["id"],))
+            break
+    conn.commit()
+    conn.close()
     emit("wb_img_delete", data, to=room, include_self=False)
 
 @socketio.on("wb_segment")
@@ -386,18 +630,13 @@ def on_wb_stroke(data):
     """Completed stroke — broadcast + store."""
     room   = data["room"]
     stroke = data["stroke"]
-    if room not in boards:
-        boards[room] = []
-    boards[room].append(stroke)
-    # Cap at 300 strokes
-    if len(boards[room]) > 300:
-        boards[room] = boards[room][-300:]
+    save_stroke(room, stroke)
     emit("wb_stroke", {"stroke": stroke}, to=room, include_self=False)
 
 @socketio.on("wb_clear")
 def on_wb_clear(data):
     room = data["room"]
-    boards[room] = []
+    clear_board(room)
     emit("wb_clear", {}, to=room, include_self=False)
 
 @socketio.on("wb_undo")
@@ -406,13 +645,8 @@ def on_wb_undo(data):
     room = data["room"]
     sid  = request.sid
     uname = rooms.get(room, {}).get(sid, {}).get("username", "")
-    # Remove last stroke by this user
-    if room in boards:
-        for i in range(len(boards[room])-1, -1, -1):
-            if boards[room][i].get("by") == uname:
-                boards[room].pop(i)
-                break
-    emit("wb_state", {"board": boards.get(room, [])}, to=room)
+    undo_stroke(room, uname)
+    emit("wb_state", {"board": get_room_board(room)}, to=room)
 
 # ── Disconnect ─────────────────────────────────────────────
 
@@ -429,18 +663,30 @@ def delayed_cleanup(room):
     eventlet.sleep(180)
     if room in rooms and not rooms[room]:
         rooms.pop(room, None)
-        history.pop(room, None)
-        boards.pop(room, None)
         games.pop(room, None)
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM messages WHERE room = ?", (room,))
+            cursor.execute("DELETE FROM strokes WHERE room = ?", (room,))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("DB cleanup failed:", e)
 
 def deferred_remove(sid, room, username):
     eventlet.sleep(15)  # 15s grace period for unexpected drops
     if room not in rooms:
         return
-    username_still_connected = any(u["username"] == username for osid, u in rooms[room].items() if osid != sid)
+    token = None
+    if sid in rooms[room]:
+        token = rooms[room][sid].get("token")
+    token_still_connected = False
+    if token:
+        token_still_connected = any(u.get("token") == token for osid, u in rooms[room].items() if osid != sid)
     if sid in rooms[room]:
         del rooms[room][sid]
-    if not username_still_connected:
+    if not token_still_connected:
         if rooms[room]:
             emit("user_left", {"sid": sid, "username": username, "users": room_users(room), "ts": ts()}, to=room)
         else:

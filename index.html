@@ -551,6 +551,27 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
   70%{transform:scale(1);box-shadow:0 0 0 6px rgba(239,68,68,0)}
   100%{transform:scale(0.85);box-shadow:0 0 0 0 rgba(239,68,68,0)}
 }
+.msg-status {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  vertical-align: middle;
+  line-height: 1;
+}
+.checks {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: -2px;
+  font-weight: 800;
+  opacity: 0.65;
+  display: inline-block;
+  transform: scaleX(1.1);
+}
+.checks.read {
+  color: #00e5ff !important;
+  opacity: 1 !important;
+  text-shadow: 0 0 4px rgba(0,229,255,0.4);
+}
 </style>
 </head>
 <body>
@@ -591,7 +612,7 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
     <div class="users-list">
       <div class="user-row" v-for="u in users" :key="u.sid">
         <div class="uavatar" :style="{background:u.color}">{{ u.username[0].toUpperCase() }}</div>
-        <span class="uname">{{ u.username }}<span v-if="u.sid===mySid" style="color:var(--muted);font-weight:400"> (you)</span></span>
+        <span class="uname">{{ u.username }}<span v-if="u.username===username" style="color:var(--muted);font-weight:400"> (you)</span></span>
         <span class="ustatus"></span>
       </div>
     </div>
@@ -623,11 +644,17 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
         </div>
 
         <!-- IMAGE message -->
-        <div v-else-if="m.kind==='image'" class="msg-group" :class="{own:m.sid===mySid}" :data-msgid="m.id">
+        <div v-else-if="m.kind==='image'" class="msg-group" :class="{own:m.username===username}" :data-msgid="m.id">
           <div class="msg-meta">
             <div class="mavatar" :style="{background:m.color}">{{ m.username[0].toUpperCase() }}</div>
-            <span class="muser" :style="{color:m.color}">{{ m.username }}<span v-if="m.sid===mySid" style="color:var(--muted);font-weight:400;font-size:11px"> (you)</span></span>
-            <span class="mtime">{{ m.ts }}</span>
+            <span class="muser" :style="{color:m.color}">{{ m.username }}<span v-if="m.username===username" style="color:var(--muted);font-weight:400;font-size:11px"> (you)</span></span>
+            <span class="mtime">
+              {{ m.ts }}
+              <span v-if="m.username === username" class="msg-status">
+                <span v-if="hasOthersRead(m)" class="checks read" title="Read by others">✓✓</span>
+                <span v-else class="checks" title="Sent">✓✓</span>
+              </span>
+            </span>
           </div>
           <div class="msg-wrap">
             <div class="msg-actions">
@@ -648,7 +675,7 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
             </div>
             <div v-if="m.reactions && Object.keys(m.reactions).length" class="reaction-row">
               <div v-for="(rusers,emoji) in m.reactions" :key="emoji"
-                class="reaction-chip" :class="{mine:rusers.includes(mySid)}"
+                class="reaction-chip" :class="{mine:rusers.includes(username)}"
                 @click="reactMsg(m,emoji)">
                 {{emoji}}<span class="rcount">{{rusers.length}}</span>
               </div>
@@ -657,11 +684,17 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
         </div>
 
         <!-- TEXT message -->
-        <div v-else class="msg-group" :class="{own:m.sid===mySid}" :data-msgid="m.id">
+        <div v-else class="msg-group" :class="{own:m.username===username}" :data-msgid="m.id">
           <div class="msg-meta">
             <div class="mavatar" :style="{background:m.color}">{{ m.username[0].toUpperCase() }}</div>
-            <span class="muser" :style="{color:m.color}">{{ m.username }}<span v-if="m.sid===mySid" style="color:var(--muted);font-weight:400;font-size:11px"> (you)</span></span>
-            <span class="mtime">{{ m.ts }}</span>
+            <span class="muser" :style="{color:m.color}">{{ m.username }}<span v-if="m.username===username" style="color:var(--muted);font-weight:400;font-size:11px"> (you)</span></span>
+            <span class="mtime">
+              {{ m.ts }}
+              <span v-if="m.username === username" class="msg-status">
+                <span v-if="hasOthersRead(m)" class="checks read" title="Read by others">✓✓</span>
+                <span v-else class="checks" title="Sent">✓✓</span>
+              </span>
+            </span>
           </div>
           <div class="msg-wrap">
             <div class="msg-actions">
@@ -678,7 +711,7 @@ svg.lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
             <div class="bubble" :class="{'big-emoji':isBigEmoji(m.message)}">{{ m.message }}</div>
             <div v-if="m.reactions && Object.keys(m.reactions).length" class="reaction-row">
               <div v-for="(rusers,emoji) in m.reactions" :key="emoji"
-                class="reaction-chip" :class="{mine:rusers.includes(mySid)}"
+                class="reaction-chip" :class="{mine:rusers.includes(username)}"
                 @click="reactMsg(m,emoji)">
                 {{emoji}}<span class="rcount">{{rusers.length}}</span>
               </div>
@@ -1045,6 +1078,7 @@ createApp({
     const username    = ref('')
     const room        = ref('')
     const mySid       = ref('')   // unique socket id for this session
+    const myToken     = ref('')   // unique secret session token
     const users       = ref([])
     const messages    = ref([])
     const typers      = ref([])
@@ -1757,6 +1791,7 @@ createApp({
       const uname=form.value.username.trim(),rname=form.value.room.trim()
       username.value=uname; room.value=rname; errMsg.value=''; screen.value='connecting'
       const url=window.location.hostname==='localhost'?'http://localhost:5000':window.location.origin
+      const savedToken = localStorage.getItem(`deeeptalk_token_${rname}`) || ''
       socket=io(url,{
         transports:['websocket'],
         upgrade:false,
@@ -1768,7 +1803,7 @@ createApp({
       })
       socket.on('connect',()=>{
         isReconnecting.value=false
-        socket.emit('join',{username:uname,room:rname})
+        socket.emit('join',{username:uname,room:rname,token:savedToken})
       })
       socket.on('connect_error',(err)=>{
         if(screen.value==='connecting'){
@@ -1779,9 +1814,16 @@ createApp({
           isReconnecting.value=true
         }
       })
+      socket.on('join_error',(d)=>{
+        errMsg.value=d.msg
+        screen.value='join'
+        if(socket){socket.disconnect();socket=null}
+      })
       socket.on('joined',(d)=>{
         users.value=d.users
         mySid.value=d.sid            // unique identity — even if names collide
+        myToken.value=d.token        // save secret token
+        localStorage.setItem(`deeeptalk_token_${d.room}`, d.token) // persist it
         username.value=d.username
         room.value=d.room
         if(d.history?.length){messages.value=d.history;hasHistory.value=true}
@@ -1793,10 +1835,24 @@ createApp({
         }
         if(d.board?.length){strokes=d.board; if(showWB.value) redrawAll()}
         scrollDown()
+        socket.emit('read_all', { room: room.value, username: username.value })
       })
       socket.on('user_joined',(d)=>{ users.value=d.users; messages.value.push({kind:'event',text:`${d.username} joined the room`,ts:d.ts}); scrollDown() })
       socket.on('user_left',(d)=>{ users.value=d.users; typers.value=typers.value.filter(t=>t.sid!==d.sid); delete wbDrawers.value[d.username]; delete remoteCursors[d.username]; messages.value.push({kind:'event',text:`${d.username} left the room`,ts:d.ts}); scrollDown() })
-      socket.on('new_msg',(d)=>{ messages.value.push(d); scrollDown() })
+      socket.on('new_msg',(d)=>{
+        messages.value.push(d)
+        scrollDown()
+        if(document.hasFocus()){
+          socket.emit('read_all', { room: room.value, username: username.value })
+        }
+      })
+      socket.on('msg_read_update',(d)=>{
+        if(!d.updates) return
+        for(const [msgId, readBy] of Object.entries(d.updates)){
+          const msg = messages.value.find(m=>m.id===msgId)
+          if(msg) msg.readBy = readBy
+        }
+      })
       socket.on('reaction_update',(d)=>{
         const msg = messages.value.find(m=>m.id===d.msg_id)
         if(msg) msg.reactions = d.reactions
@@ -1872,6 +1928,7 @@ createApp({
 
     function doLeave(){
       if(socket){socket.emit('leave',{username:username.value,room:room.value});socket.disconnect();socket=null}
+      localStorage.removeItem(`deeeptalk_token_${room.value}`)
       screen.value='join'; messages.value=[];users.value=[];typers.value=[];draft.value='';errMsg.value='';
       sidebarOpen.value=false;pendingImage.value=null;hasHistory.value=false;replyingTo.value=null;
       showWB.value=false;strokes=[];remoteCursors={};stopMinimapLoop();wbImgPanel.value=false
@@ -1994,10 +2051,28 @@ createApp({
       }; r.readAsDataURL(file); e.target.value=''
     }
 
-    onUnmounted(()=>{ if(socket) socket.disconnect(); window.removeEventListener('resize',onResize); window.removeEventListener('popstate',onPopState); stopMinimapLoop() })
+    function onWindowFocus(){
+      if(socket && screen.value==='chat'){
+        socket.emit('read_all', { room: room.value, username: username.value })
+      }
+    }
+    window.addEventListener('focus', onWindowFocus)
+
+    function hasOthersRead(m){
+      if(!m.readBy) return false
+      return m.readBy.some(u => u !== username.value)
+    }
+
+    onUnmounted(()=>{
+      if(socket) socket.disconnect();
+      window.removeEventListener('resize',onResize);
+      window.removeEventListener('popstate',onPopState);
+      window.removeEventListener('focus', onWindowFocus);
+      stopMinimapLoop()
+    })
 
     return {
-      screen,errMsg,form,isReconnecting,username,room,mySid,users,messages,typers,
+      screen,errMsg,form,isReconnecting,username,room,mySid,myToken,users,messages,typers,
       draft,showEmoji,emojiQ,eCat,eCats,filteredEmoji,canJoin,canSend,
       anchor,msgBox,chatInput,fileInput,cameraInput,sidebarOpen,pendingImage,lightboxSrc,hasHistory,
       replyingTo,quickEmoji,allReactEmoji,reactPickerMsg,reactPickerPos,openReactPicker,
@@ -2007,7 +2082,7 @@ createApp({
       setTool,toggleWB,openGame,wbUndo,wbClearConfirm,fitAll,goHome,jumpToUser,onMinimapClick,
       onMD,onMM,onMU,onML,onDblClick,onWheel,onTD,onTM,onTU,
       doJoin,doLeave,confirmLeave,showLeaveConfirm,doSend,onEnterKey,onInput,pickEmoji,isBigEmoji,onFileChange,
-      reactMsg,startReply,scrollToMsg,insertImageToWB,_doInsertImage
+      reactMsg,startReply,scrollToMsg,insertImageToWB,_doInsertImage,hasOthersRead
     }
   }
 }).mount('#app')
